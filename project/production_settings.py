@@ -3,7 +3,7 @@ from project.settings import *
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    'lunchcrawler.heroku.com',
+    'lunchcrawler.herokuapp.com',
 ]
 
 #CSRF_COOKIE_SECURE = True
