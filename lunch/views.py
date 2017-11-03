@@ -11,9 +11,11 @@ class Restaurant:
 
 
 class Menu:
-    def __init__(self, name, menu):
+    def __init__(self, name, menu, post_id, created_time):
         self.name = name
         self.menu = menu
+        self.post_id = post_id
+        self.created_time = created_time
 
 
 restaurants = [
@@ -22,6 +24,8 @@ restaurants = [
     Restaurant(name="Bal", facebook_name="balnazablociu"),
     Restaurant(name="Nasze Smaki Bistoro", facebook_name="405341849804282"),
     Restaurant(name="Nasze Smaki", facebook_name="1451080808450048"),
+    Restaurant(name="PapaYo", facebook_name="papayokrakow"),
+    Restaurant(name="Mniam", facebook_name="mniamkrakow"),
 ]
 
 facebook_app_id = getattr(settings, "FACEBOOK_APP_ID", None)
@@ -41,10 +45,16 @@ def index(request):
         posts = graph.get_connections(profile['id'], 'posts')
 
         menu = posts['data'][0]['message']
+        post_id = posts['data'][0]['id']
+        created_time = posts['data'][0]['created_time']
+
+        if restaurant.name == "PapaYo":
+            menu = menu.replace("\n\n", "\n")
 
         menus.append(
-            Menu(restaurant.name, menu)
+            Menu(restaurant.name, menu, post_id, created_time)
         )
+
 
     context = {
         'restaurants': menus
