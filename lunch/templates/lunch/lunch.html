@@ -1,0 +1,16 @@
+{% extends 'lunch/base.html' %}
+
+{% load static %}
+
+{% block content %}
+    <div>
+    {% for restaurant in restaurants %}
+        <h3>
+        {{ restaurant.name }}
+        </h3>
+        <span>
+        {{ restaurant.menu|linebreaks }}
+        </span>
+    {% endfor %}
+    </div>
+{% endblock %}

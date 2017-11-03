@@ -1,6 +1,8 @@
 # lunch-crawler
 Django application to fetch lunch menus from nearby restaurants
 
+http://lunchcrawler.herokuapp.com
+
 ## Project scope
 * daily fetch posts from restaurant facebook profiles
 * among posts find best candidate for today's menu or report there is none
