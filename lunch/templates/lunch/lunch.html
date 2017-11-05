@@ -10,8 +10,14 @@
             {% for restaurant in restaurants %}
                 <div class="col-lg-4">
                     <h2>{{ restaurant.name }}</h2>
-                    <p>{{ restaurant.menu|linebreaks }}</p>
-                    <p><a class="btn btn-primary" href="https://facebook.com/{{ restaurant.post_id }}" role="button">Post na fb &raquo;</a></p>
+                    {% if restaurant.is_today_menu %}
+                        <p>{{ restaurant.menu|linebreaks }}</p>
+                        <p><a class="btn btn-primary" href="https://facebook.com/{{ restaurant.post_id }}" role="button">Post na fb &raquo;</a></p>
+                    {% else %}
+                        <div class="alert alert-danger" role="alert">
+                            Restauracja nie dodała jeszcze menu.
+                        </div>
+                    {% endif %}
                 </div>
             {% endfor %}
         </div>

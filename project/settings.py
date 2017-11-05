@@ -32,6 +32,7 @@ DEBUG = True
 # Application definition
 
 INSTALLED_APPS = [
+    'lunch.apps.LunchConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,7 +43,6 @@ INSTALLED_APPS = [
     # http://whitenoise.evans.io/en/stable/django.html#using-whitenoise-in-development
     'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
-    'lunch',
 ]
 
 MIDDLEWARE = [
