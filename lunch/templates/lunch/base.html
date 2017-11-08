@@ -9,8 +9,26 @@
 
     <!-- Bootstrap Bootstrap v4.0.0-beta.2 -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+
+    <style>
+        body {
+          padding-top: 5rem;
+        }
+    </style>
+
 </head>
 <body>
+
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+      <a class="navbar-brand" href="#">Lunch crawler</a>
+      <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item active">
+            <a class="nav-link" href="https://github.com/KrzysztofSakowski/lunch-crawler/issues">Zgłoś błąd</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
 
 {% block content %}
 {% endblock %}

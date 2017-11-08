@@ -4,8 +4,7 @@
 
 {% block content %}
 
-    <div class="container">
-      <main role="main">
+    <main role="main" class="container">
         <div class="row">
             {% for restaurant in restaurants %}
                 <div class="col-lg-4">
@@ -21,7 +20,6 @@
                 </div>
             {% endfor %}
         </div>
-      </main>
-    </div>
+    </main>
 
 {% endblock %}
