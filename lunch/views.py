@@ -14,13 +14,13 @@ class Restaurant:
 
 
 class Menu:
-    def __init__(self, name, menu, post_id, created_time, date_str, *, is_today_menu):
+    def __init__(self, name, menu="", post_id="-1", created_time="", date_str="", *, is_valid):
         self.name = name
         self.menu = menu
         self.post_id = post_id
         self.created_time = created_time
         self.date_str = date_str
-        self.is_today_menu = is_today_menu
+        self.is_valid = is_valid
 
 
 restaurants = [
@@ -41,7 +41,7 @@ access_token = facebook_app_id + "|" + facebook_app_secret
 def get_menu(restaurant, posts):
 
     if not posts:
-        return Menu(restaurant.name, "", 0, "", "", is_today_menu=False)
+        return Menu(restaurant.name, is_valid=False)
 
     post = posts[0]
 
@@ -62,7 +62,7 @@ def get_menu(restaurant, posts):
 
     is_today_menu = date_polish.day == date_now_polish.day
 
-    return Menu(restaurant.name, menu, post_id, created_time, f"{date_now_polish:%d}", is_today_menu=is_today_menu)
+    return Menu(restaurant.name, menu, post_id, created_time, f"{date_now_polish:%d}", is_valid=is_today_menu)
 
 
 def index(request):
