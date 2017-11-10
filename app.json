@@ -19,7 +19,7 @@
     },
     "DATABASE_URL": {
       "required": true
-    },
+    }
   },
   "formation": {},
   "addons": [
