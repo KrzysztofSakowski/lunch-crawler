@@ -1,7 +1,7 @@
 {
   "name": "lunch-crawler",
   "scripts": {},
-  "env":{
+  "env": {
     "HEROKU_APP_NAME": {
       "required": true
     },
@@ -19,7 +19,7 @@
     },
     "DATABASE_URL": {
       "required": true
-    }
+    },
   },
   "formation": {},
   "addons": [
