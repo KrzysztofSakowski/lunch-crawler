@@ -2,6 +2,12 @@
   "name": "lunch-crawler",
   "scripts": {},
   "env": {
+    "HEROKU_APP_NAME": {
+      "required": true
+    },
+    "HEROKU_PARENT_APP_NAME": {
+      "required": true
+    },
     "DJANGO_SECRET_KEY": {
       "required": true
     },
@@ -11,16 +17,7 @@
     "FACEBOOK_APP_SECRET": {
       "required": true
     },
-    "POSTGRES_HOST": {
-      "required": true
-    },
-    "POSTGRES_NAME": {
-      "required": true
-    },
-    "POSTGRES_PASSWORD": {
-      "required": true
-    },
-    "POSTGRES_USER": {
+    "DATABASE_URL": {
       "required": true
     }
   },
