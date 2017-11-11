@@ -2,9 +2,14 @@ from project.settings import *
 
 DEBUG = False
 
-ALLOWED_HOSTS = [
-    os.environ['HEROKU_APP_NAME'] + '.herokuapp.com',
-]
+if 'HEROKU_APP_NAME' in os.environ:
+    ALLOWED_HOSTS = [
+        os.environ['HEROKU_APP_NAME'] + '.herokuapp.com',
+    ]
+else:
+    ALLOWED_HOSTS = [
+        'lunchcrawler.herokuapp.com',
+    ]
 
 #CSRF_COOKIE_SECURE = True
 #SESSION_COOKIE_SECURE = True
