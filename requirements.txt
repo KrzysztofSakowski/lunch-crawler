@@ -2,6 +2,7 @@ certifi==2017.7.27.1
 chardet==3.0.4
 dj-database-url==0.4.1
 Django==1.11.1
+django-model-utils==3.0.0
 facebook-sdk==2.0.0
 gunicorn==19.6.0
 idna==2.6

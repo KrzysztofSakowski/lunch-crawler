@@ -1,5 +1,9 @@
 from django.shortcuts import render
 
+from .models import Restaurant, FacebookPost
+
+from django.db.utils import IntegrityError
+
 from django.conf import settings
 import datetime
 import facebook
@@ -7,41 +11,21 @@ import dateutil.parser
 from dateutil import tz
 
 
-class Restaurant:
-    def __init__(self, name, facebook_name):
-        self.name = name
-        self.facebook_name = facebook_name
-
-
-class Menu:
-    def __init__(self, name, menu="", post_id="-1", created_time="", date_str="", *, is_valid):
-        self.name = name
-        self.menu = menu
-        self.post_id = post_id
-        self.created_time = created_time
-        self.date_str = date_str
-        self.is_valid = is_valid
-
-
-restaurants = [
-    Restaurant(name="Emalia", facebook_name="Emaliazablocie"),
-    Restaurant(name="Welldone", facebook_name="welldonekrakow"),
-    Restaurant(name="Bal", facebook_name="balnazablociu"),
-    Restaurant(name="Nasze Smaki Bistro", facebook_name="405341849804282"),
-    Restaurant(name="PapaYo", facebook_name="papayokrakow"),
-    Restaurant(name="Mniam", facebook_name="mniamkrakow"),
-]
-
 facebook_app_id = getattr(settings, "FACEBOOK_APP_ID", None)
 facebook_app_secret = getattr(settings, "FACEBOOK_APP_SECRET", None)
 
 access_token = facebook_app_id + "|" + facebook_app_secret
 
 
+def get_facebook_id(graph, facebook_name):
+    profile = graph.get_object(facebook_name)
+    return profile['id']
+
+
 def get_menu(restaurant, posts):
 
     if not posts:
-        return Menu(restaurant.name, is_valid=False)
+        return None
 
     post = posts[0]
 
@@ -60,30 +44,81 @@ def get_menu(restaurant, posts):
     if restaurant.name == "PapaYo":
         menu = menu.replace("\n\n", "\n")
 
+    facebook_post = FacebookPost(
+        restaurant=restaurant,
+        created_date=date,
+        message=menu,
+        facebook_id=post_id
+    )
+
+    try:
+        facebook_post.save()
+    except IntegrityError:
+        print("Menu already in db - can never happen")
+
     is_today_menu = date_polish.day == date_now_polish.day
 
-    return Menu(restaurant.name, menu, post_id, created_time, f"{date_now_polish:%d}", is_valid=is_today_menu)
+    if is_today_menu:
+        return facebook_post
+    else:
+        return None
+
+
+def find_in_db(restaurant):
+    query = FacebookPost.objects.filter(
+        restaurant=restaurant,
+    )
+    query = query.filter(
+        created_date__date=datetime.date.today()
+    )
+    query = query.exclude(
+        is_lunch="confirmed_not"
+    )
+
+    if query:
+        return query[0]
+    else:
+        return None
+
+
+def get_post_ids(restaurant):
+    query = FacebookPost.objects.filter(
+        restaurant=restaurant,
+    )
+
+    return {post.facebook_id for post in query}
+
+
+def crawl_facebook(restaurant):
+    graph = facebook.GraphAPI(access_token=access_token)
+
+    posts = graph.get_connections(restaurant.facebook_id, 'posts')['data']
+
+    # filter posts that does not contain message
+    posts = [post for post in posts if 'message' in post]
+
+    # filter posts already in db
+    ids = get_post_ids(restaurant)
+
+    posts = [post for post in posts if post['id'] not in ids]
+
+    return get_menu(restaurant=restaurant, posts=posts)
 
 
 def index(request):
-    graph = facebook.GraphAPI(access_token=access_token)
+    menus = {}
 
-    menus = []
+    for restaurant in Restaurant.objects.all():
 
-    for restaurant in restaurants:
-        user = restaurant.facebook_name
-        profile = graph.get_object(user)
-        posts = graph.get_connections(profile['id'], 'posts')['data']
+        menu = find_in_db(restaurant)
 
-        # filter posts that does not contain message
-        posts = [post for post in posts if 'message' in post]
+        if not menu:
+            menu = crawl_facebook(restaurant)
 
-        menus.append(
-            get_menu(restaurant=restaurant, posts=posts)
-        )
+        menus[restaurant] = menu
 
     context = {
-        'restaurants': menus
+        'menus': menus
     }
 
     return render(request, 'lunch/lunch.html', context)

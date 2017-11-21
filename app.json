@@ -13,6 +13,9 @@
     },
     "DATABASE_URL": {
       "required": true
+    },
+    "ADMIN_PASS": {
+      "required": true
     }
   },
   "formation": {},
