@@ -10,7 +10,6 @@ import facebook
 import dateutil.parser
 from dateutil import tz
 
-
 facebook_app_id = getattr(settings, "FACEBOOK_APP_ID", None)
 facebook_app_secret = getattr(settings, "FACEBOOK_APP_SECRET", None)
 
@@ -23,7 +22,6 @@ def get_facebook_id(graph, facebook_name):
 
 
 def get_menu(restaurant, posts):
-
     if not posts:
         return None
 
