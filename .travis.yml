@@ -1,0 +1,14 @@
+language: python
+services:
+- postgresql
+python:
+- '3.6'
+install: pip install -U -r requirements.txt
+before_script:
+- psql -c 'create database test_db;' -U postgres
+- python manage.py collectstatic --noinput
+script:
+- python manage.py test lunch
+notifications:
+  slack:
+    secure: Bu63+9qo9MvVyFJV1jc39qO1Ouc3ragik1oCJf43jkVZ/pgG0SG5mM5GK7SS8WpFApYfoeSb/FAOlBXRwEPjbk/uDWuAfq3d7GziZECrwADjgh4N4mnK6rk7urkQw7cbbdj6AfijsSiYDvKLHAJVVYqsRDsTe8kRHn5ZVnVAJ2D9GBFJp3ZxD3IZj9l6RZC+GJ5F56pHclu18UbamCODP5vLXks7lGRnMuLxtyyIUSEXA+qyYOihZYXlghxczyF1JnBK5EKIbYogRytV5BMmo7zNNB4yKdJ2JzXkH2bf/Xej1Y8HagSC4ndaGN2h6RuNrhRlr/VPgckvwSDKIOP+OArlhcbSrhLZPItktGbhlwzrpk8/Osa+zx5KljAf+DL/82GrJ/lAIK9NLmSygmU0R8KVgL8BQ32TMMFPAMmSN2RwIgv+r/n1nBB9c7rAB0uKGR/8SsBAbI17Cuvhfe5eT1PlB+vyYvU+Bk5CevfiM1BHRD0lSkc4Lc1T1MwdEV8c+6aIp0vvfJ6ZRtKzf7QY4InDWNe9kULAJDvj69atY7it18MxwQt7aEM0snzjKMqq9ZFrWXBER+akUG7QNnNejlp/ISKN78cAKBlJXnB6FybKYHdmwgJgUJum122eR5xPi7uS+9TAky4RXkva/eoYsWn/OY7VA8SQSHE86UeV5j0=

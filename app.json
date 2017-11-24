@@ -2,12 +2,6 @@
   "name": "lunch-crawler",
   "scripts": {},
   "env": {
-    "HEROKU_APP_NAME": {
-      "required": true
-    },
-    "HEROKU_PARENT_APP_NAME": {
-      "required": true
-    },
     "DJANGO_SECRET_KEY": {
       "required": true
     },
@@ -18,6 +12,9 @@
       "required": true
     },
     "DATABASE_URL": {
+      "required": true
+    },
+    "ADMIN_PASS": {
       "required": true
     }
   },

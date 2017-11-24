@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/KrzysztofSakowski/lunch-crawler.svg?branch=master)](https://travis-ci.org/KrzysztofSakowski/lunch-crawler/)
+
 # lunch-crawler
 Django application to fetch lunch menus from nearby restaurants
 
