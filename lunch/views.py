@@ -4,6 +4,8 @@ from .models import Restaurant, FacebookPost
 
 from django.db.utils import IntegrityError
 
+import logging
+
 from django.conf import settings
 import datetime
 import facebook
@@ -14,6 +16,8 @@ facebook_app_id = getattr(settings, "FACEBOOK_APP_ID", None)
 facebook_app_secret = getattr(settings, "FACEBOOK_APP_SECRET", None)
 
 access_token = facebook_app_id + "|" + facebook_app_secret
+
+logger = logging.getLogger("logger")
 
 
 def get_facebook_id(graph, facebook_name):
@@ -52,7 +56,7 @@ def get_menu(restaurant, posts):
     try:
         facebook_post.save()
     except IntegrityError:
-        print("Menu already in db - can never happen")
+        logger.warning(f"Facebook post with id={post_id} already in db")
 
     is_today_menu = date_polish.day == date_now_polish.day
 
@@ -104,6 +108,8 @@ def crawl_facebook(restaurant):
 
 
 def index(request):
+    logger.info(f"Index requested")
+
     menus = {}
 
     for restaurant in Restaurant.objects.all():
