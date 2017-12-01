@@ -120,3 +120,7 @@ def index(request):
     }
 
     return render(request, 'lunch/lunch.html', context)
+
+
+def login(request):
+    return render(request, 'lunch/templates/registration/login.html', {})

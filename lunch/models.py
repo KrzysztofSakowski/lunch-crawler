@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 from model_utils.fields import StatusField
 from model_utils import Choices
 
