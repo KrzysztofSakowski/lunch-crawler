@@ -24,7 +24,7 @@ def get_facebook_id(graph, facebook_name):
     return profile['id']
 
 
-def get_menu(restaurant, posts):
+def save_posts(restaurant, posts):
     logger.info(f"For {restaurant}: {len(posts)} posts are going be saved to db")
 
     for post in posts:
@@ -90,11 +90,11 @@ def crawl_facebook(restaurant):
 
     posts = [post for post in posts if post['id'] not in ids]
 
-    return get_menu(restaurant=restaurant, posts=posts)
+    save_posts(restaurant=restaurant, posts=posts)
 
 
 def index(request):
-    logger.info(f"Index requested")
+    logger.info("Index requested")
 
     menus = {}
 
