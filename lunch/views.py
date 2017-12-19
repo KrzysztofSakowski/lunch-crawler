@@ -6,16 +6,19 @@ from .forms import UserProfileCreationForm
 
 from django.db.utils import IntegrityError
 
+import logging
+
 from django.conf import settings
 import datetime
 import facebook
 import dateutil.parser
-from dateutil import tz
 
 facebook_app_id = getattr(settings, "FACEBOOK_APP_ID", None)
 facebook_app_secret = getattr(settings, "FACEBOOK_APP_SECRET", None)
 
 access_token = facebook_app_id + "|" + facebook_app_secret
+
+logger = logging.getLogger("logger")
 
 
 def get_facebook_id(graph, facebook_name):
@@ -23,45 +26,27 @@ def get_facebook_id(graph, facebook_name):
     return profile['id']
 
 
-def get_menu(restaurant, posts):
-    if not posts:
-        return None
+def save_posts(restaurant, posts):
+    logger.info(f"For {restaurant}: {len(posts)} posts are going be saved to db")
 
-    post = posts[0]
+    for post in posts:
+        menu = post['message']
+        post_id = post['id']
+        created_time = post['created_time']
 
-    menu = post['message']
-    post_id = post['id']
-    created_time = post['created_time']
+        date = dateutil.parser.parse(created_time)
 
-    date = dateutil.parser.parse(created_time)
+        facebook_post = FacebookPost(
+            restaurant=restaurant,
+            created_date=date,
+            message=menu,
+            facebook_id=post_id
+        )
 
-    to_zone = tz.gettz('Europe/Warsaw')
-    date_polish = date.astimezone(to_zone)
-
-    date_now_polish = datetime.datetime.now()
-    date_now_polish = date_now_polish.astimezone(to_zone)
-
-    if restaurant.name == "PapaYo":
-        menu = menu.replace("\n\n", "\n")
-
-    facebook_post = FacebookPost(
-        restaurant=restaurant,
-        created_date=date,
-        message=menu,
-        facebook_id=post_id
-    )
-
-    try:
-        facebook_post.save()
-    except IntegrityError:
-        print("Menu already in db - can never happen")
-
-    is_today_menu = date_polish.day == date_now_polish.day
-
-    if is_today_menu:
-        return facebook_post
-    else:
-        return None
+        try:
+            facebook_post.save()
+        except IntegrityError:
+            logger.warning(f"Facebook post with id={post_id} already exists in db")
 
 
 def find_in_db(restaurant):
@@ -73,6 +58,11 @@ def find_in_db(restaurant):
     )
     query = query.exclude(
         is_lunch="confirmed_not"
+    )
+    # this is used to prefer confirmed over unknown
+    # taking advantage of their alphabetical order
+    query = query.order_by(
+        'is_lunch'
     )
 
     if query:
@@ -102,10 +92,12 @@ def crawl_facebook(restaurant):
 
     posts = [post for post in posts if post['id'] not in ids]
 
-    return get_menu(restaurant=restaurant, posts=posts)
+    save_posts(restaurant=restaurant, posts=posts)
 
 
 def index(request):
+    logger.info("Index requested")
+
     menus = {}
 
     for restaurant in Restaurant.objects.all():
@@ -113,7 +105,8 @@ def index(request):
         menu = find_in_db(restaurant)
 
         if not menu:
-            menu = crawl_facebook(restaurant)
+            crawl_facebook(restaurant)
+            menu = find_in_db(restaurant)
 
         menus[restaurant] = menu
 
