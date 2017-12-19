@@ -96,6 +96,10 @@ def crawl_facebook(restaurant):
 
 
 def index(request):
+    return render(request, 'lunch/index.html')
+
+
+def restaurants(request, context=None):
     logger.info("Index requested")
 
     menus = {}
@@ -123,7 +127,8 @@ def signup(request):
         if form.is_valid():
             user = form.save()
             auth_login(request, user)
-            return redirect('/')
+            logger.info(f"user.id")
+            return redirect(user)
     else:
         form = UserProfileCreationForm()
 

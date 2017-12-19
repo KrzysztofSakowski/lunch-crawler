@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.urls import reverse
 from model_utils.fields import StatusField
 from model_utils import Choices
 
@@ -35,3 +36,6 @@ class FacebookPost(models.Model):
 
 class UserProfile(AbstractUser):
     restaurants = models.ManyToManyField(Restaurant)
+
+    def get_absolute_url(self):
+        return reverse('restaurants_own', args=[self.id])

@@ -25,7 +25,6 @@
 
 </head>
 <body>
-{% block body %}
 <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
     <a class="navbar-brand" href="/">Lunch crawler</a>
 
@@ -40,7 +39,7 @@
                 <a class="nav-link" href="login" class="js-popup-link"><span class="fa fa-user"></span> Zaloguj</a>
             </li>
             <li class="nav-item active">
-                <a class="nav-link" href="signup"><span class="fa fa-user-plus"></span> Zarejestruj</a>
+                <a class="nav-link" href={% url 'signup' %}><span class="fa fa-user-plus"></span> Zarejestruj</a>
             </li>
         </ul>
     </div>
@@ -49,7 +48,6 @@
 {% block content %}
 {% endblock %}
 
-{% endblock body %}
 </body>
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
         integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
