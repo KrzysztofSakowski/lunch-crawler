@@ -32,7 +32,6 @@ DEBUG = True
 # Application definition
 
 INSTALLED_APPS = [
-    'lunch.apps.LunchConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -43,6 +42,8 @@ INSTALLED_APPS = [
     # http://whitenoise.evans.io/en/stable/django.html#using-whitenoise-in-development
     'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
+    'lunch',
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [
@@ -92,6 +93,8 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+AUTH_USER_MODEL = 'lunch.UserProfile'
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/

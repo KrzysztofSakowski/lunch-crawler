@@ -1,6 +1,7 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 
-from .models import Restaurant, FacebookPost
+from .models import Restaurant, FacebookPost, UserProfile
 
 
 class FacebookPostAdmin(admin.ModelAdmin):
@@ -13,8 +14,15 @@ class FacebookPostAdmin(admin.ModelAdmin):
     def format_date(self, obj):
         return obj.created_date.strftime('%Y-%m-%d, %R')
 
+
 class RestaurantAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'facebook_id')
 
+
+class UserProfileAdmin(UserAdmin):
+    list_display = ('id', 'username')
+
+
 admin.site.register(Restaurant, RestaurantAdmin)
 admin.site.register(FacebookPost, FacebookPostAdmin)
+admin.site.register(UserProfile, UserProfileAdmin)

@@ -31,3 +31,7 @@ class FacebookPost(models.Model):
         post_id = self.facebook_id[self.facebook_id.index("_")+1:]
 
         return f"{self.restaurant.name} {post_id}"
+
+
+class UserProfile(AbstractUser):
+    restaurants = models.ManyToManyField(Restaurant)

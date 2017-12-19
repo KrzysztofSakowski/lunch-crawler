@@ -1,6 +1,8 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib.auth import login as auth_login
 
 from .models import Restaurant, FacebookPost
+from .forms import UserProfileCreationForm
 
 from django.db.utils import IntegrityError
 
@@ -122,5 +124,14 @@ def index(request):
     return render(request, 'lunch/lunch.html', context)
 
 
-def login(request):
-    return render(request, 'lunch/templates/registration/login.html', {})
+def signup(request):
+    if request.method == 'POST':
+        form = UserProfileCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            auth_login(request, user)
+            return redirect('/')
+    else:
+        form = UserProfileCreationForm()
+
+    return render(request, 'accounts/signup.html', {'form': form})

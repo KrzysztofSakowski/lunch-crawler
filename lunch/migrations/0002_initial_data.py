@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import os
 from django.db import migrations
 from collections import namedtuple
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
 
 def add_init_data(apps, schema_editor):
@@ -37,11 +37,11 @@ def remove_init_data(apps, schema_editor):
 
 
 def create_superuser(apps, schema_editor):
-    User.objects.create_superuser(username='admin', password=os.environ['ADMIN_PASS'], email='admin@example.com')
+    get_user_model().objects.create_superuser(username='admin', password=os.environ['ADMIN_PASS'], email='admin@example.com')
 
 
 def delete_superuser(apps, schema_editor):
-    user = User.objects.get(username='admin')
+    user = get_user_model().objects.get(username='admin')
     user.delete()
 
 
