@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login as auth_login
-from django.contrib.auth.forms import User
+from django.contrib.auth.decorators import login_required
 
 from .models import Restaurant, FacebookPost
 from .forms import UserProfileCreationForm
@@ -134,3 +134,8 @@ def signup(request):
         form = UserProfileCreationForm()
 
     return render(request, 'accounts/signup.html', {'form': form})
+
+
+@login_required(login_url='/login/')
+def add_restaurant(request):
+    return redirect('/')
