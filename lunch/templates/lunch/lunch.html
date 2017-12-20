@@ -11,7 +11,8 @@
                     <h2>{{ restaurant.name }}</h2>
                     {% if menu %}
                         <p>{{ menu.message|linebreaks }}</p>
-                        <p><a class="btn btn-primary" href="https://facebook.com/{{ menu.facebook_id }}" role="button">Post na fb &raquo;</a></p>
+                        <p><a class="btn btn-primary" href="https://facebook.com/{{ menu.facebook_id }}" role="button">Post
+                            na fb &raquo;</a></p>
                     {% else %}
                         <div class="alert alert-danger" role="alert">
                             Restauracja nie dodała jeszcze menu.

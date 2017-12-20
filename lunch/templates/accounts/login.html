@@ -1,16 +1,16 @@
 {% extends 'lunch/base.html' %}
 
 {% block title %}
-    Rejestracja
+    Logowanie
 {% endblock %}
 
 {% block content %}
     <div class="container">
-        <h2>Rejestracja</h2>
+        <h2>Logowanie</h2>
         <form method="post" novalidate>
             {% csrf_token %}
             {% include 'accounts/form.html' %}
-            <button type="submit" class="btn btn-primary">Załóż konto</button>
+            <button type="submit" class="btn btn-primary">Zaloguj</button>
         </form>
     </div>
 {% endblock %}

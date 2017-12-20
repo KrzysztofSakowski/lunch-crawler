@@ -29,7 +29,7 @@ class FacebookPost(models.Model):
     def __str__(self):
         # facebook_id has format: [profile_id]_[post_id]
         # we extract post id
-        post_id = self.facebook_id[self.facebook_id.index("_")+1:]
+        post_id = self.facebook_id[self.facebook_id.index("_") + 1:]
 
         return f"{self.restaurant.name} {post_id}"
 

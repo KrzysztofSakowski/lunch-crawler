@@ -35,12 +35,24 @@
             </li>
         </ul>
         <ul class="navbar-nav navbar-right">
-            <li class="nav-item active">
-                <a class="nav-link" href="login" class="js-popup-link"><span class="fa fa-user"></span> Zaloguj</a>
-            </li>
-            <li class="nav-item active">
-                <a class="nav-link" href={% url 'signup' %}><span class="fa fa-user-plus"></span> Zarejestruj</a>
-            </li>
+            {% if user.is_authenticated %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="userMenu" data-toggle="dropdown"
+                       aria-haspopup="true" aria-expanded="false">
+                        {{ user.username }}
+                    </a>
+                    <div class="dropdown-menu dopdown-menu-right" aria-labelledby="userMenu">
+                        <a class="dropdown-item" href="{% url 'logout' %}">Wyloguj</a>
+                    </div>
+                </li>
+            {% else %}
+                <li class="nav-item active">
+                    <a class="nav-link" href={% url 'login' %} class="js-popup-link"><span class="fa fa-user"></span>Zaloguj</a>
+                </li>
+                <li class="nav-item active">
+                    <a class="nav-link" href={% url 'signup' %}><span class="fa fa-user-plus"></span>Zarejestruj</a>
+                </li>
+            {% endif %}
         </ul>
     </div>
 </nav>
