@@ -121,6 +121,26 @@ def restaurants(request, context=None):
 
     return render(request, 'lunch/lunch.html', context)
 
+def restaurants_own(request, context=None):
+    logger.info("Index requested")
+
+    menus = {}
+
+    for restaurant in request.user.restaurants.all():
+
+        menu = find_in_db(restaurant)
+
+        if not menu:
+            crawl_facebook(restaurant)
+            menu = find_in_db(restaurant)
+
+        menus[restaurant] = menu
+
+    context = {
+        'menus': menus
+    }
+
+    return render(request, 'lunch/lunch.html', context)
 
 def signup(request):
     if request.method == 'POST':
