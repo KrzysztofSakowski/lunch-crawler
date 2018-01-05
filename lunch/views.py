@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.decorators import login_required
+from django.core.urlresolvers import resolve
 
 from .models import Restaurant, FacebookPost
 from .forms import UserProfileCreationForm
@@ -96,17 +97,22 @@ def crawl_facebook(restaurant):
     save_posts(restaurant=restaurant, posts=posts)
 
 
-def index(request):
+def index_view(request):
     return render(request, 'lunch/index.html')
 
 
-def restaurants(request, context=None):
+@login_required(login_url='/login/')
+def restaurants_view(request, context=None):
     logger.info("Index requested")
 
     menus = {}
 
-    for restaurant in Restaurant.objects.all():
+    if 'example' in resolve(request.path).url_name:
+        restaurants = Restaurant.objects.all()
+    else:
+        restaurants = request.user.restaurants.all()
 
+    for restaurant in restaurants:
         menu = find_in_db(restaurant)
 
         if not menu:
@@ -121,28 +127,8 @@ def restaurants(request, context=None):
 
     return render(request, 'lunch/lunch.html', context)
 
-def restaurants_own(request, context=None):
-    logger.info("Index requested")
 
-    menus = {}
-
-    for restaurant in request.user.restaurants.all():
-
-        menu = find_in_db(restaurant)
-
-        if not menu:
-            crawl_facebook(restaurant)
-            menu = find_in_db(restaurant)
-
-        menus[restaurant] = menu
-
-    context = {
-        'menus': menus
-    }
-
-    return render(request, 'lunch/lunch.html', context)
-
-def signup(request):
+def signup_view(request):
     if request.method == 'POST':
         form = UserProfileCreationForm(request.POST)
         if form.is_valid():
