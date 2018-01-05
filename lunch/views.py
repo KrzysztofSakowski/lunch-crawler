@@ -2,9 +2,10 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import resolve
+from django.urls import reverse
 
 from .models import Restaurant, FacebookPost
-from .forms import UserProfileCreationForm
+import lunch.forms as lunchForms
 
 from django.db.utils import IntegrityError
 
@@ -130,18 +131,27 @@ def restaurants_view(request, context=None):
 
 def signup_view(request):
     if request.method == 'POST':
-        form = UserProfileCreationForm(request.POST)
+        form = lunchForms.UserProfileCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             auth_login(request, user)
             logger.info(f"user.id")
-            return redirect(user)
+            return redirect(reverse('restaurants_own', args=[user.id]))
     else:
-        form = UserProfileCreationForm()
+        form = lunchForms.UserProfileCreationForm()
 
     return render(request, 'accounts/signup.html', {'form': form})
 
 
 @login_required(login_url='/login/')
 def add_restaurant(request):
-    return redirect('/')
+    if request.method == 'POST':
+        form = lunchForms.RestaurantAddForm(request.POST)
+        if form.is_valid():
+            restaurant = form.save()
+            logger.info(f"restaurant.name")
+            return redirect(reverse('restaurants'))
+    else:
+        form = lunchForms.RestaurantAddForm()
+
+    return render(request, 'lunch/addrestaurant.html', {'form': form})

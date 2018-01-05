@@ -9,7 +9,7 @@
         <h2>Rejestracja</h2>
         <form method="post" novalidate>
             {% csrf_token %}
-            {% include 'accounts/form.html' %}
+            {% include '../form.html' %}
             <button type="submit" class="btn btn-primary">Załóż konto</button>
         </form>
     </div>

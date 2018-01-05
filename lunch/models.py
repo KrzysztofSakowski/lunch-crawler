@@ -7,7 +7,7 @@ from model_utils import Choices
 
 class Restaurant(models.Model):
     name = models.CharField(max_length=50)
-    facebook_id = models.CharField(max_length=50)
+    facebook_id = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
         return self.name
@@ -36,6 +36,3 @@ class FacebookPost(models.Model):
 
 class UserProfile(AbstractUser):
     restaurants = models.ManyToManyField(Restaurant)
-
-    def get_absolute_url(self):
-        return reverse('restaurants_own', args=[self.id])
