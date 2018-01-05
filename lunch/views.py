@@ -1,27 +1,13 @@
 from django.shortcuts import render
-
 from .models import Restaurant, FacebookPost
-
+from .facebook_api import Facebook
 from django.db.utils import IntegrityError
-
+import dateutil.parser
+import datetime
 import logging
 
-from django.conf import settings
-import datetime
-import facebook
-import dateutil.parser
-
-facebook_app_id = getattr(settings, "FACEBOOK_APP_ID", None)
-facebook_app_secret = getattr(settings, "FACEBOOK_APP_SECRET", None)
-
-access_token = facebook_app_id + "|" + facebook_app_secret
 
 logger = logging.getLogger("logger")
-
-
-def get_facebook_id(graph, facebook_name):
-    profile = graph.get_object(facebook_name)
-    return profile['id']
 
 
 def save_posts(restaurant, posts):
@@ -77,10 +63,8 @@ def get_post_ids(restaurant):
     return {post.facebook_id for post in query}
 
 
-def crawl_facebook(restaurant):
-    graph = facebook.GraphAPI(access_token=access_token)
-
-    posts = graph.get_connections(restaurant.facebook_id, 'posts')['data']
+def crawl_facebook(restaurant, facebook):
+    posts = facebook.get_posts(restaurant.facebook_id)
 
     # filter posts that does not contain message
     posts = [post for post in posts if 'message' in post]
@@ -103,7 +87,7 @@ def index(request):
         menu = find_in_db(restaurant)
 
         if not menu:
-            crawl_facebook(restaurant)
+            crawl_facebook(restaurant, Facebook())
             menu = find_in_db(restaurant)
 
         menus[restaurant] = menu

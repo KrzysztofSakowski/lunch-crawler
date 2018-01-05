@@ -3,8 +3,24 @@ from django.test import TestCase
 from collections import namedtuple
 from .models import Restaurant, FacebookPost
 from django.urls import reverse
+import dateutil.parser
 import datetime
-from .views import find_in_db
+from .views import find_in_db, crawl_facebook
+from django.utils import timezone
+from .facebook_api import Facebook
+from unittest import skip
+
+
+class FacebookStub:
+    def __init__(self, created_time, message, post_id):
+        self._post = {'created_time': created_time,
+                      'message': message,
+                      'id': post_id}
+
+    def get_posts(self, facebook_id):
+        return [
+            self._post
+        ]
 
 
 class IndexViewTests(TestCase):
@@ -70,4 +86,38 @@ class IndexViewTests(TestCase):
 
         post = find_in_db(restaurant)
 
-        self.assertEqual('3', post.facebook_id)
+        self.assertEqual("3", post.facebook_id)
+
+    def test_crawl_facebook(self):
+        test_restaurant = Restaurant(
+            name="text",
+            facebook_id="text"
+        )
+        test_restaurant.save()
+
+        created_time = timezone.now().isoformat()
+        message = "text"
+        post_id = "543608312506454_764080817125868"
+
+        facebook_stub = FacebookStub(
+            created_time=created_time,
+            message=message,
+            post_id=post_id
+        )
+
+        crawl_facebook(test_restaurant, facebook_stub)
+
+        post_in_db = find_in_db(test_restaurant)
+
+        self.assertEqual(post_id, post_in_db.facebook_id)
+        self.assertEqual(message, post_in_db.message)
+        self.assertEqual(dateutil.parser.parse(created_time), post_in_db.created_date)
+
+        test_restaurant.delete()
+
+    @skip("Test will not work without facebook credentials")
+    def test_is_valid(self):
+        facebook = Facebook()
+
+        self.assertFalse(facebook.is_valid_profile_id("-1"))
+        self.assertTrue(facebook.is_valid_profile_id("372700889466233"))
