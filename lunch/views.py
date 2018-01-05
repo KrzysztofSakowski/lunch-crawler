@@ -93,7 +93,6 @@ def about_view(request):
     return render(request, 'lunch/about.html')
 
 
-# @login_required(login_url='/login/')
 def restaurants_view(request):
     logger.info("Index requested")
 
