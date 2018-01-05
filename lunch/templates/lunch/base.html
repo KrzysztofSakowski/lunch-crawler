@@ -44,18 +44,21 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="userMenu" data-toggle="dropdown"
                        aria-haspopup="true" aria-expanded="false">
-                        {{ user.username }}
+                        <span class="fa fa-user"/> {{ user.username }}
                     </a>
                     <div class="dropdown-menu dopdown-menu-right" aria-labelledby="userMenu">
-                        <a class="dropdown-item" href="{% url 'logout' %}">Wyloguj</a>
+                        <a class="dropdown-item" href="{% url 'add_restaurant' %}"><span class="fa fa-cutlery"/>
+                            Dodaj restauracje</a>
+                        <a class="dropdown-item" href="{% url 'logout' %}"><span class="fa fa-sign-out"/> Wyloguj</a>
                     </div>
                 </li>
             {% else %}
                 <li class="nav-item active">
-                    <a class="nav-link" href={% url 'login' %} class="js-popup-link"><span class="fa fa-user"></span>Zaloguj</a>
+                    <a class="nav-link" href={% url 'login' %} class="js-popup-link"><span class="fa fa-user"></span>
+                        Zaloguj</a>
                 </li>
                 <li class="nav-item active">
-                    <a class="nav-link" href={% url 'signup' %}><span class="fa fa-user-plus"></span>Zarejestruj</a>
+                    <a class="nav-link" href={% url 'signup' %}><span class="fa fa-user-plus"></span> Zarejestruj</a>
                 </li>
             {% endif %}
         </ul>

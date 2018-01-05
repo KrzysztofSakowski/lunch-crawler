@@ -1,8 +1,7 @@
+from django.contrib.auth.models import User
 from django.db import models
-from django.contrib.auth.models import AbstractUser
-from django.urls import reverse
-from model_utils.fields import StatusField
 from model_utils import Choices
+from model_utils.fields import StatusField
 
 
 class Restaurant(models.Model):
@@ -34,5 +33,6 @@ class FacebookPost(models.Model):
         return f"{self.restaurant.name} {post_id}"
 
 
-class UserProfile(AbstractUser):
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.deletion.CASCADE)
     restaurants = models.ManyToManyField(Restaurant)

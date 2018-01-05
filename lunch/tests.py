@@ -1,14 +1,15 @@
-from django.test import TestCase
-
-from collections import namedtuple
-from .models import Restaurant, FacebookPost
-from django.urls import reverse
-import dateutil.parser
 import datetime
-from .views import find_in_db, crawl_facebook
-from django.utils import timezone
-from .facebook_api import Facebook
+from collections import namedtuple
 from unittest import skip
+
+import dateutil.parser
+from django.test import TestCase
+from django.urls import reverse
+from django.utils import timezone
+
+from .facebook_api import Facebook
+from .models import Restaurant, FacebookPost
+from .views import find_in_db, crawl_facebook
 
 
 class FacebookStub:
@@ -121,3 +122,8 @@ class IndexViewTests(TestCase):
 
         self.assertFalse(facebook.is_valid_profile_id("-1"))
         self.assertTrue(facebook.is_valid_profile_id("372700889466233"))
+
+    @skip("Test will not work without facebook credentials")
+    def test_get_id(self):
+        facebook = Facebook()
+        self.assertEqual("1550000475309485", facebook.get_facebook_id("zustdoustkrk"))

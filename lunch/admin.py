@@ -1,12 +1,10 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import User as DjangoUser
 
 from .models import Restaurant, FacebookPost, UserProfile
 
 
 class FacebookPostAdmin(admin.ModelAdmin):
-    list_display = ('id',       'restaurant', 'format_date', 'is_lunch', 'message')
+    list_display = ('id', 'restaurant', 'format_date', 'is_lunch', 'message')
     list_filter = ('restaurant', 'created_date', 'is_lunch')
     list_editable = ('is_lunch',)
 
@@ -19,21 +17,25 @@ class FacebookPostAdmin(admin.ModelAdmin):
 class RestaurantAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'facebook_id')
 
+
 class UserProfileInline(admin.StackedInline):
     model = UserProfile.restaurants.through
 
-class UserProfileAdmin(UserAdmin):
-    inlines = (UserProfileInline,)
-    list_display = ('id', 'username', 'restaurants')
+
+class UserProfileAdmin(admin.ModelAdmin):
+    inlines = UserProfileInline,
+    list_display = ('name', 'restaurants_list',)
 
     def get_inline_instances(self, request, obj=None):
         if not obj:
-            return list()
+            return []
         return super(UserProfileAdmin, self).get_inline_instances(request, obj)
 
-    def restaurants(self, obj):
-        return "\n".join([a.name for a in obj.restaurant_set.all()])
+    def name(self, obj):
+        return obj.user.username
 
+    def restaurants_list(self, obj):
+        return "\n".join([a.name for a in obj.restaurants.all()])
 
 admin.site.register(Restaurant, RestaurantAdmin)
 admin.site.register(FacebookPost, FacebookPostAdmin)

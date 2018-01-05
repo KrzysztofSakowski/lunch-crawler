@@ -92,9 +92,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTH_USER_MODEL = 'lunch.UserProfile'
-
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/restaurants'
 LOGOUT_REDIRECT_URL = '/'
 
 # Internationalization
