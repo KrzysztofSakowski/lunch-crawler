@@ -7,6 +7,8 @@ import dateutil.parser
 import datetime
 from .views import find_in_db, crawl_facebook
 from django.utils import timezone
+from .facebook_api import Facebook
+from unittest import skip
 
 
 class FacebookStub:
@@ -112,3 +114,10 @@ class IndexViewTests(TestCase):
         self.assertEqual(dateutil.parser.parse(created_time), post_in_db.created_date)
 
         test_restaurant.delete()
+
+    @skip("Test will not work without facebook credentials")
+    def test_is_valid(self):
+        facebook = Facebook()
+
+        self.assertFalse(facebook.is_valid_profile_id("-1"))
+        self.assertTrue(facebook.is_valid_profile_id("372700889466233"))

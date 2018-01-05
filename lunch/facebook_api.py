@@ -18,3 +18,10 @@ class Facebook:
     def get_facebook_id(self, facebook_name):
         profile = self._graph.get_object(facebook_name)
         return profile['id']
+
+    def is_valid_profile_id(self, profile_id):
+        try:
+            self._graph.get_object(profile_id)
+            return True
+        except facebook.GraphAPIError:
+            return False

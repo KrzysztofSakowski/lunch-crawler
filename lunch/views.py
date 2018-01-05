@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from .models import Restaurant, FacebookPost
-from .facebook import Facebook
+from .facebook_api import Facebook
 from django.db.utils import IntegrityError
 import dateutil.parser
 import datetime
