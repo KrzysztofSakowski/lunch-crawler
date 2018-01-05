@@ -1,10 +1,22 @@
-from django.shortcuts import render
-from .models import Restaurant, FacebookPost
-from .facebook_api import Facebook
-from django.db.utils import IntegrityError
-import dateutil.parser
 import datetime
 import logging
+import dateutil.parser
+
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import redirect_to_login
+from django.core.urlresolvers import resolve
+from django.db.utils import IntegrityError
+from django.shortcuts import redirect, resolve_url
+from django.shortcuts import render
+from django.urls import reverse
+from django.core import serializers
+from django.http import JsonResponse
+
+import lunch.forms as lunch_forms
+from .facebook_api import Facebook
+from .models import Restaurant, FacebookPost, UserProfile
 
 
 logger = logging.getLogger("logger")
@@ -77,13 +89,28 @@ def crawl_facebook(restaurant, facebook):
     save_posts(restaurant=restaurant, posts=posts)
 
 
-def index(request):
+def about_view(request):
+    return render(request, 'lunch/about.html')
+
+
+# @login_required(login_url='/login/')
+def restaurants_view(request):
     logger.info("Index requested")
 
     menus = {}
 
-    for restaurant in Restaurant.objects.all():
+    if 'example' in resolve(request.path).url_name:
+        restaurants = Restaurant.objects.all()
+    elif request.user.is_authenticated():
+        user_profile = UserProfile.objects.filter(
+            user=request.user,
+        )
+        restaurants = user_profile[0].restaurants.all()
+    else:
+        return redirect_to_login(
+            request.get_full_path(), resolve_url('/login/'), 'next')
 
+    for restaurant in restaurants:
         menu = find_in_db(restaurant)
 
         if not menu:
@@ -97,3 +124,41 @@ def index(request):
     }
 
     return render(request, 'lunch/lunch.html', context)
+
+
+def signup_view(request):
+    if request.method == 'POST':
+        form = lunch_forms.UserProfileCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            logger.info(f"{user.id}")
+            return redirect('restaurants')
+    else:
+        form = lunch_forms.UserProfileCreationForm()
+
+    return render(request, 'accounts/signup.html', {'form': form})
+
+
+@login_required(login_url='/login/')
+def addrestaurant_view(request):
+    if request.method == 'POST':
+        form = lunch_forms.RestaurantAddForm(request.POST)
+        if form.is_valid():
+            user_profile = UserProfile.objects.get(user=request.user)
+
+            restaurant = form.save(user_profile)
+            logger.info(f"{restaurant.name}")
+            return redirect(reverse('restaurants'))
+    else:
+        form = lunch_forms.RestaurantAddForm()
+
+    return render(request, 'lunch/add_restaurant.html', {'form': form})
+
+
+@staff_member_required
+def download_data(request):
+    posts = FacebookPost.objects.all()
+    data = serializers.serialize('json', posts)
+
+    return JsonResponse(data, safe=False)
