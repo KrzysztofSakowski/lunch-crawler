@@ -1,7 +1,8 @@
 import datetime
 import logging
-
 import dateutil.parser
+
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import resolve
@@ -9,10 +10,13 @@ from django.db.utils import IntegrityError
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.core import serializers
+from django.http import JsonResponse
 
 import lunch.forms as lunch_forms
 from .facebook_api import Facebook
 from .models import Restaurant, FacebookPost, UserProfile
+
 
 logger = logging.getLogger("logger")
 
@@ -145,4 +149,12 @@ def add_restaurant(request):
     else:
         form = lunch_forms.RestaurantAddForm()
 
-    return render(request, 'lunch/addrestaurant.html', {'form': form})
+    return render(request, 'lunch/add_restaurant.html', {'form': form})
+
+
+@staff_member_required
+def download_data(request):
+    posts = FacebookPost.objects.all()
+    data = serializers.serialize('json', posts)
+
+    return JsonResponse(data, safe=False)
