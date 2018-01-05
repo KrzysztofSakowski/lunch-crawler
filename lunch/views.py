@@ -4,9 +4,10 @@ import logging
 import dateutil.parser
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import redirect_to_login
 from django.core.urlresolvers import resolve
 from django.db.utils import IntegrityError
-from django.shortcuts import redirect
+from django.shortcuts import redirect, resolve_url
 from django.shortcuts import render
 from django.urls import reverse
 
@@ -84,11 +85,11 @@ def crawl_facebook(restaurant, facebook):
     save_posts(restaurant=restaurant, posts=posts)
 
 
-def index_view(request):
-    return render(request, 'lunch/index.html')
+def about_view(request):
+    return render(request, 'lunch/about.html')
 
 
-@login_required(login_url='/login/')
+# @login_required(login_url='/login/')
 def restaurants_view(request):
     logger.info("Index requested")
 
@@ -96,11 +97,14 @@ def restaurants_view(request):
 
     if 'example' in resolve(request.path).url_name:
         restaurants = Restaurant.objects.all()
-    else:
+    elif request.user.is_authenticated():
         user_profile = UserProfile.objects.filter(
             user=request.user,
         )
         restaurants = user_profile[0].restaurants.all()
+    else:
+        return redirect_to_login(
+            request.get_full_path(), resolve_url('/login/'), 'next')
 
     for restaurant in restaurants:
         menu = find_in_db(restaurant)
@@ -133,7 +137,7 @@ def signup_view(request):
 
 
 @login_required(login_url='/login/')
-def add_restaurant(request):
+def addrestaurant_view(request):
     if request.method == 'POST':
         form = lunch_forms.RestaurantAddForm(request.POST)
         if form.is_valid():
