@@ -1,32 +1,20 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import login as auth_login
-from django.contrib.auth.decorators import login_required
-from django.core.urlresolvers import resolve
-from django.urls import reverse
-
-from .models import Restaurant, FacebookPost
-import lunch.forms as lunchForms
-
-from django.db.utils import IntegrityError
-
+import datetime
 import logging
 
-from django.conf import settings
-import datetime
-import facebook
 import dateutil.parser
+from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
+from django.core.urlresolvers import resolve
+from django.db.utils import IntegrityError
+from django.shortcuts import redirect
+from django.shortcuts import render
+from django.urls import reverse
 
-facebook_app_id = getattr(settings, "FACEBOOK_APP_ID", None)
-facebook_app_secret = getattr(settings, "FACEBOOK_APP_SECRET", None)
-
-access_token = facebook_app_id + "|" + facebook_app_secret
+import lunch.forms as lunch_forms
+from .facebook_api import Facebook
+from .models import Restaurant, FacebookPost, UserProfile
 
 logger = logging.getLogger("logger")
-
-
-def get_facebook_id(graph, facebook_name):
-    profile = graph.get_object(facebook_name)
-    return profile['id']
 
 
 def save_posts(restaurant, posts):
@@ -82,10 +70,8 @@ def get_post_ids(restaurant):
     return {post.facebook_id for post in query}
 
 
-def crawl_facebook(restaurant):
-    graph = facebook.GraphAPI(access_token=access_token)
-
-    posts = graph.get_connections(restaurant.facebook_id, 'posts')['data']
+def crawl_facebook(restaurant, facebook):
+    posts = facebook.get_posts(restaurant.facebook_id)
 
     # filter posts that does not contain message
     posts = [post for post in posts if 'message' in post]
@@ -103,7 +89,7 @@ def index_view(request):
 
 
 @login_required(login_url='/login/')
-def restaurants_view(request, context=None):
+def restaurants_view(request):
     logger.info("Index requested")
 
     menus = {}
@@ -111,13 +97,16 @@ def restaurants_view(request, context=None):
     if 'example' in resolve(request.path).url_name:
         restaurants = Restaurant.objects.all()
     else:
-        restaurants = request.user.restaurants.all()
+        user_profile = UserProfile.objects.filter(
+            user=request.user,
+        )
+        restaurants = user_profile[0].restaurants.all()
 
     for restaurant in restaurants:
         menu = find_in_db(restaurant)
 
         if not menu:
-            crawl_facebook(restaurant)
+            crawl_facebook(restaurant, Facebook())
             menu = find_in_db(restaurant)
 
         menus[restaurant] = menu
@@ -131,14 +120,14 @@ def restaurants_view(request, context=None):
 
 def signup_view(request):
     if request.method == 'POST':
-        form = lunchForms.UserProfileCreationForm(request.POST)
+        form = lunch_forms.UserProfileCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            auth_login(request, user)
-            logger.info(f"user.id")
-            return redirect(reverse('restaurants_own', args=[user.id]))
+            login(request, user)
+            logger.info(f"{user.id}")
+            return redirect('restaurants')
     else:
-        form = lunchForms.UserProfileCreationForm()
+        form = lunch_forms.UserProfileCreationForm()
 
     return render(request, 'accounts/signup.html', {'form': form})
 
@@ -146,12 +135,14 @@ def signup_view(request):
 @login_required(login_url='/login/')
 def add_restaurant(request):
     if request.method == 'POST':
-        form = lunchForms.RestaurantAddForm(request.POST)
+        form = lunch_forms.RestaurantAddForm(request.POST)
         if form.is_valid():
-            restaurant = form.save()
-            logger.info(f"restaurant.name")
+            user_profile = UserProfile.objects.get(user=request.user)
+
+            restaurant = form.save(user_profile)
+            logger.info(f"{restaurant.name}")
             return redirect(reverse('restaurants'))
     else:
-        form = lunchForms.RestaurantAddForm()
+        form = lunch_forms.RestaurantAddForm()
 
     return render(request, 'lunch/addrestaurant.html', {'form': form})
