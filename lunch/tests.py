@@ -8,25 +8,21 @@ from django.urls import reverse
 from django.utils import timezone
 from django.contrib.auth.models import User
 
-from .facebook_api import Facebook
+from .facebook_api import FacebookFactory
 from .models import Restaurant, FacebookPost, UserProfile
 from .views import find_in_db, crawl_facebook
-
-
-class FacebookStub:
-    def __init__(self, created_time, message, post_id):
-        self._post = {'created_time': created_time,
-                      'message': message,
-                      'id': post_id}
-
-    def get_posts(self, facebook_id):
-        return [
-            self._post
-        ]
+from .apps import LunchConfig
 
 
 class IndexViewTests(TestCase):
+
+    def tearDown(self):
+        LunchConfig.use_facebook_api = True
+
     def setUp(self):
+        # will use facebook stub instead of real API calls
+        LunchConfig.use_facebook_api = False
+
         # temporary fix
         # if there is no posts associated with restaurant
         # facebook is going to be crawled and it will fail
@@ -103,7 +99,7 @@ class IndexViewTests(TestCase):
         message = "text"
         post_id = "543608312506454_764080817125868"
 
-        facebook_stub = FacebookStub(
+        facebook_stub = FacebookFactory.create(
             created_time=created_time,
             message=message,
             post_id=post_id
@@ -119,36 +115,37 @@ class IndexViewTests(TestCase):
 
         test_restaurant.delete()
 
+
+class FacebookTest(TestCase):
     @skip("Test will not work without facebook credentials")
     def test_is_valid(self):
-        facebook = Facebook()
+        facebook = FacebookFactory.create()
 
         self.assertFalse(facebook.is_valid_profile_id("-1"))
         self.assertTrue(facebook.is_valid_profile_id("372700889466233"))
 
     @skip("Test will not work without facebook credentials")
     def test_get_id(self):
-        facebook = Facebook()
+        facebook = FacebookFactory.create()
         self.assertEqual("1550000475309485", facebook.get_facebook_id("zustdoustkrk"))
 
 
 class UserProfileTests(TestCase):
     def test_profile_adds_restaurants(self):
-        userprofile = UserProfile.objects.create(user=User.objects.create(username='asd', password='1234'))
+        user_profile = UserProfile.objects.create(user=User.objects.create(username='asd', password='1234'))
         restaurant1 = Restaurant.objects.create(name='Res1', facebook_id='1')
         restaurant2 = Restaurant.objects.create(name='Res2', facebook_id='2')
 
-        userprofile.restaurants.add(restaurant1)
-        userprofile.restaurants.add(restaurant2)
+        user_profile.restaurants.add(restaurant1)
+        user_profile.restaurants.add(restaurant2)
 
-        self.assertEqual(len(userprofile.restaurants.all()), 2)
+        self.assertEqual(len(user_profile.restaurants.all()), 2)
 
     def test_profile_validation_for_duplicate_restaurants(self):
-        userprofile = UserProfile.objects.create(user=User.objects.create(username='asd', password='1234'))
+        user_profile = UserProfile.objects.create(user=User.objects.create(username='asd', password='1234'))
         restaurant = Restaurant.objects.create(name='Res1', facebook_id='1')
 
-        userprofile.restaurants.add(restaurant)
-        userprofile.restaurants.add(restaurant)
+        user_profile.restaurants.add(restaurant)
+        user_profile.restaurants.add(restaurant)
 
-        self.assertEqual(len(userprofile.restaurants.all()), 1)
-
+        self.assertEqual(len(user_profile.restaurants.all()), 1)

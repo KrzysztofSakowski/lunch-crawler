@@ -15,7 +15,7 @@ from django.core import serializers
 from django.http import JsonResponse
 
 import lunch.forms as lunch_forms
-from .facebook_api import Facebook
+from .facebook_api import FacebookFactory
 from .models import Restaurant, FacebookPost, UserProfile
 
 
@@ -96,24 +96,24 @@ def about_view(request):
 def restaurants_view(request):
     logger.info("Index requested")
 
-    menus = {}
-
     if 'example' in resolve(request.path).url_name:
         restaurants = Restaurant.objects.all()
     elif request.user.is_authenticated():
-        user_profile = UserProfile.objects.filter(
-            user=request.user,
-        )
-        restaurants = user_profile[0].restaurants.all()
+
+        user_profile = UserProfile.objects.get(user=request.user)
+
+        restaurants = user_profile.restaurants.all()
     else:
         return redirect_to_login(
             request.get_full_path(), resolve_url('/login/'), 'next')
+
+    menus = {}
 
     for restaurant in restaurants:
         menu = find_in_db(restaurant)
 
         if not menu:
-            crawl_facebook(restaurant, Facebook())
+            crawl_facebook(restaurant, FacebookFactory.create())
             menu = find_in_db(restaurant)
 
         menus[restaurant] = menu
@@ -140,7 +140,7 @@ def signup_view(request):
 
 
 @login_required(login_url='/login/')
-def addrestaurant_view(request):
+def add_restaurant_view(request):
     if request.method == 'POST':
         form = lunch_forms.RestaurantAddForm(request.POST)
         if form.is_valid():

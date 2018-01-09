@@ -1,6 +1,26 @@
 from django.conf import settings
-
+from .apps import LunchConfig
 import facebook
+
+
+class FacebookFactory:
+    def create(*args, **kwargs):
+        if LunchConfig.use_facebook_api:
+            return Facebook()
+        else:
+            return FacebookStub(*args, **kwargs)
+
+
+class FacebookStub:
+    def __init__(self, created_time, message, post_id):
+        self._post = {'created_time': created_time,
+                      'message': message,
+                      'id': post_id}
+
+    def get_posts(self, facebook_id):
+        return [
+            self._post
+        ]
 
 
 class Facebook:
