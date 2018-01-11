@@ -69,6 +69,7 @@
               },
               error: function (data) {
                   console.log("submit error: ", data.responseJSON.error);
+                  alert(data.responseJSON.error);
               }
           });
           return false;

@@ -98,7 +98,7 @@ class VoteForm(forms.Form):
 
         if is_up_vote:
             if post in user_profile.voted_up_on.all():
-                err_msg = f"Already up voted post post with id={post_id}"
+                err_msg = f"Already up voted post with id={post_id}"
                 logger.warning(err_msg)
                 context["error"] = err_msg
 
@@ -114,7 +114,7 @@ class VoteForm(forms.Form):
 
         else:
             if post in user_profile.voted_down_on.all():
-                err_msg = f"Already down voted post post with id={post_id}"
+                err_msg = f"Already down voted post with id={post_id}"
                 logger.warning(err_msg)
                 context["error"] = err_msg
 

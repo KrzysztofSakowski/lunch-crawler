@@ -169,7 +169,7 @@ def vote(request):
     if not request.user.is_authenticated():
         return JsonResponse(
             status=400,
-            data={"error": "login required"}
+            data={"error": "login required to vote"}
         )
 
     if request.method == 'POST':
