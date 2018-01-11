@@ -12,6 +12,14 @@ class Restaurant(models.Model):
         return self.name
 
 
+class Occupation(models.Model):
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.deletion.CASCADE)
+
+    seats_taken = models.IntegerField(default=0)
+    seats_total = models.IntegerField(default=0)
+    date_declared = models.DateField(editable=False)
+
+
 class FacebookPost(models.Model):
     restaurant = models.ForeignKey(Restaurant, on_delete=models.deletion.CASCADE)
 

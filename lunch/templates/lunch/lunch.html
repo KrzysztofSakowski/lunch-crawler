@@ -5,19 +5,22 @@
 {% block content %}
     <main role="main" class="container">
         <div class="row">
-            {% for restaurant, menu in menus.items %}
+            {% for restaurant, restaurant_context in restaurant_contexts.items %}
                 <div class="col-lg-4">
                     <h2>{{ restaurant.name }}</h2>
-                    {% if menu %}
-                        <p>{{ menu.message|linebreaks }}</p>
-                        <p><a class="btn btn-primary" href="https://facebook.com/{{ menu.facebook_id }}"
-                              role="button">Post
-                            na fb &raquo;</a></p>
+                    <p>Oblozenie: {{ restaurant_context.seat_availability }} </p>
+                    {% if restaurant_context.menu %}
+                        <p>{{ restaurant_context.menu.message|linebreaks }}</p>
+                        <p><a class="btn btn-primary"
+                              href="https://facebook.com/{{ restaurant_context.menu.facebook_id }}"
+                              role="button">Post na fb &raquo;</a>
+                        </p>
                     {% else %}
                         <div class="alert alert-danger" role="alert">
                             Restauracja nie dodała jeszcze menu.
                         </div>
                     {% endif %}
+                    {% include 'lunch/seatsform.html' with form=seat_form %}
                 </div>
             {% endfor %}
         </div>

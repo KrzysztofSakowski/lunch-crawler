@@ -1,11 +1,13 @@
 import datetime
 import logging
 import dateutil.parser
+from collections import namedtuple
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import redirect_to_login
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import resolve
 from django.db.utils import IntegrityError
 from django.shortcuts import redirect, resolve_url
@@ -13,13 +15,24 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.core import serializers
 from django.http import JsonResponse
+from django.views.generic import TemplateView
 
 import lunch.forms as lunch_forms
 from .facebook_api import FacebookFactory
-from .models import Restaurant, FacebookPost, UserProfile
-
+from .models import Restaurant, FacebookPost, UserProfile, Occupation
 
 logger = logging.getLogger("logger")
+
+
+def running_average():
+    total = 0.0
+    counter = 0
+    average = None
+    while True:
+        term = yield average
+        total += term
+        counter += 1
+        average = total / counter
 
 
 def save_posts(restaurant, posts):
@@ -92,37 +105,48 @@ def crawl_facebook(restaurant, facebook):
 def about_view(request):
     return render(request, 'lunch/about.html')
 
+class restaurants_view(TemplateView):
 
-def restaurants_view(request):
-    logger.info("Index requested")
+    template_name = 'lunch/lunch.html'
 
-    if 'example' in resolve(request.path).url_name:
-        restaurants = Restaurant.objects.all()
-    elif request.user.is_authenticated():
+    def get(self, request, *args, **kwargs):
+        logger.info("Index requested")
 
-        user_profile = UserProfile.objects.get(user=request.user)
+        if 'example' in resolve(request.path).url_name:
+            restaurants = Restaurant.objects.all()
+        elif request.user.is_authenticated():
 
-        restaurants = user_profile.restaurants.all()
-    else:
-        return redirect_to_login(
-            request.get_full_path(), resolve_url('/login/'), 'next')
+            user_profile = UserProfile.objects.get(user=request.user)
 
-    menus = {}
+            restaurants = user_profile.restaurants.all()
+        else:
+            return redirect_to_login(
+                request.get_full_path(), resolve_url('/login/'), 'next')
 
-    for restaurant in restaurants:
-        menu = find_in_db(restaurant)
+        restaurant_contexts = {}
 
-        if not menu:
-            crawl_facebook(restaurant, FacebookFactory.create())
+        for restaurant in restaurants:
             menu = find_in_db(restaurant)
 
-        menus[restaurant] = menu
+            if not menu:
+                crawl_facebook(restaurant, FacebookFactory.create())
+                menu = find_in_db(restaurant)
 
-    context = {
-        'menus': menus
-    }
+            RestaurantContext = namedtuple('RestaurantContext', ["menu", "seats_availability"])
+            try:
+                seats_availability = Occupation.objects.get(restaurant=restaurant)
+            except ObjectDoesNotExist:
+                seats_availability = None
+            restaurant_contexts[restaurant] = RestaurantContext(menu, seats_availability)
 
-    return render(request, 'lunch/lunch.html', context)
+            logger.info(restaurant_contexts[restaurant])
+
+        context = {
+            'restaurant_contexts': restaurant_contexts,
+            'seat_form': lunch_forms.SeatsOccupiedForm(request.GET or None)
+        }
+
+        return render(request, 'lunch/lunch.html', context)
 
 
 def signup_view(request):
@@ -161,3 +185,6 @@ def download_data(request):
     data = serializers.serialize('json', posts)
 
     return JsonResponse(data, safe=False)
+
+def seats_taken(request):
+    return redirect(request.get_full_path())

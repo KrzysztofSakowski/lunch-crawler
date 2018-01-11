@@ -1,0 +1,13 @@
+{% block seats %}
+    {% load widget_tweaks %}
+    <div></div>
+    <form action="/post_seats" novalidate>
+        {% csrf_token %}
+        {% include '../form.html' %}
+{#        {% for field in form %}#}
+{#            {{ field.label_tag }}#}
+{#            {% render_field field class="form-control is-valid" %}#}
+{#        {% endfor %}#}
+        <button type="submit" class="btn btn-primary">Zgłoś</button>
+    </form>
+{% endblock %}

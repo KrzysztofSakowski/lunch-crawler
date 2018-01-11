@@ -3,7 +3,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
-from .models import Restaurant, UserProfile
+from .models import Restaurant, UserProfile, Occupation
 from .facebook_api import Facebook
 import logging
 
@@ -71,3 +71,9 @@ class UserProfileCreationForm(UserCreationForm):
         user_profile.save()
 
         return user
+
+
+class SeatsOccupiedForm(forms.ModelForm):
+    class Meta:
+        model = Occupation
+        fields = ['seats_taken', 'seats_total']
