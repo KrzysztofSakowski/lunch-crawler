@@ -1,8 +1,8 @@
 {% block seats %}
     {% load widget_tweaks %}
-    <div></div>
-    <form action="/post_seats" novalidate>
+    <form method="POST" action="{% url 'seats_taken' %}" novalidate>
         {% csrf_token %}
+        <p>{{ restaurant.id }}</p>
         {% include '../form.html' %}
 {#        {% for field in form %}#}
 {#            {{ field.label_tag }}#}

@@ -15,7 +15,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.core import serializers
 from django.http import JsonResponse
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, FormView
 
 import lunch.forms as lunch_forms
 from .facebook_api import FacebookFactory
@@ -105,8 +105,8 @@ def crawl_facebook(restaurant, facebook):
 def about_view(request):
     return render(request, 'lunch/about.html')
 
-class restaurants_view(TemplateView):
 
+class restaurants_view(TemplateView):
     template_name = 'lunch/lunch.html'
 
     def get(self, request, *args, **kwargs):
@@ -141,12 +141,12 @@ class restaurants_view(TemplateView):
 
             logger.info(restaurant_contexts[restaurant])
 
-        context = {
-            'restaurant_contexts': restaurant_contexts,
-            'seat_form': lunch_forms.SeatsOccupiedForm(request.GET or None)
-        }
+        context = self.get_context_data(**kwargs)
+        context['restaurant_contexts'] = restaurant_contexts
+        context['seat_form'] = lunch_forms.SeatsOccupiedForm(self.request.GET or None)
 
-        return render(request, 'lunch/lunch.html', context)
+        return self.render_to_response(context)
+        # return render(request, 'lunch/lunch.html', context)
 
 
 def signup_view(request):
@@ -186,5 +186,17 @@ def download_data(request):
 
     return JsonResponse(data, safe=False)
 
-def seats_taken(request):
-    return redirect(request.get_full_path())
+
+class seats_taken(FormView):
+    success_url = '/'
+    template_name = 'lunch/lunch.html'
+    form_class = lunch_forms.SeatsOccupiedForm
+
+    def post(self, request, *args, **kwargs):
+        seats_form = self.form_class(request.POST)
+        if False:# or seats_form.is_valid():
+            logger.info('seats form')
+            return redirect(self.get_success_url())
+        else:
+            logger.info('seats form not valid')
+            return restaurants_view.as_view()(request)#self.render_to_response(self.get_context_data(seat_form=seats_form))
