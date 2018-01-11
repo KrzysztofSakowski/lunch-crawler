@@ -109,6 +109,9 @@ def about_view(request):
 class restaurants_view(TemplateView):
     template_name = 'lunch/lunch.html'
 
+    def get_context_data(self, **kwargs):
+        return {}
+
     def get(self, request, *args, **kwargs):
         logger.info("Index requested")
 
@@ -134,7 +137,8 @@ class restaurants_view(TemplateView):
 
             RestaurantContext = namedtuple('RestaurantContext', ["menu", "seats_availability"])
             try:
-                seats_availability = Occupation.objects.get(restaurant=restaurant)
+                # seats_availability = Occupation.objects.get(restaurant=restaurant)
+                raise ObjectDoesNotExist
             except ObjectDoesNotExist:
                 seats_availability = None
             restaurant_contexts[restaurant] = RestaurantContext(menu, seats_availability)
@@ -143,10 +147,20 @@ class restaurants_view(TemplateView):
 
         context = self.get_context_data(**kwargs)
         context['restaurant_contexts'] = restaurant_contexts
-        context['seat_form'] = lunch_forms.SeatsOccupiedForm(self.request.GET or None)
+        context['seat_form'] = lunch_forms.SeatsOccupiedForm(request.GET or None)
 
         return self.render_to_response(context)
         # return render(request, 'lunch/lunch.html', context)
+
+    def post(self, request, *args, **kwargs):
+        seats_form = lunch_forms.SeatsOccupiedForm(request.POST)
+        if seats_form.is_valid():
+            logger.debug('seats form valid')
+            availability = seats_form.save(5)
+            return self.render_to_response(self.get_context_data())
+        else:
+            logger.debug('seats form not valid')
+            return self.render_to_response(self.get_context_data(seat_form=seats_form))
 
 
 def signup_view(request):
@@ -186,17 +200,3 @@ def download_data(request):
 
     return JsonResponse(data, safe=False)
 
-
-class seats_taken(FormView):
-    success_url = '/'
-    template_name = 'lunch/lunch.html'
-    form_class = lunch_forms.SeatsOccupiedForm
-
-    def post(self, request, *args, **kwargs):
-        seats_form = self.form_class(request.POST)
-        if False:# or seats_form.is_valid():
-            logger.info('seats form')
-            return redirect(self.get_success_url())
-        else:
-            logger.info('seats form not valid')
-            return restaurants_view.as_view()(request)#self.render_to_response(self.get_context_data(seat_form=seats_form))

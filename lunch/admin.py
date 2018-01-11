@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Restaurant, FacebookPost, UserProfile
+from .models import Restaurant, FacebookPost, UserProfile, Occupation
 
 
 class FacebookPostAdmin(admin.ModelAdmin):
@@ -16,7 +16,6 @@ class FacebookPostAdmin(admin.ModelAdmin):
 
 class RestaurantAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'facebook_id')
-
 
 class UserProfileInline(admin.StackedInline):
     model = UserProfile.restaurants.through
@@ -37,6 +36,14 @@ class UserProfileAdmin(admin.ModelAdmin):
     def restaurants_list(self, obj):
         return "\n".join([a.name for a in obj.restaurants.all()])
 
+class SeatAdmin(admin.ModelAdmin):
+    list_display = ('id', 'restaurant', 'seats_taken', 'seats_total', 'date_declared')
+
+    def restaurant(self, obj):
+        return obj.restaurant.name
+
+
 admin.site.register(Restaurant, RestaurantAdmin)
 admin.site.register(FacebookPost, FacebookPostAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
+admin.site.register(Occupation, SeatAdmin)

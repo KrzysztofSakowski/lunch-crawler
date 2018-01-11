@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+from django.db.models.functions import datetime
 
 from .models import Restaurant, UserProfile, Occupation
 from .facebook_api import Facebook
@@ -77,3 +78,21 @@ class SeatsOccupiedForm(forms.ModelForm):
     class Meta:
         model = Occupation
         fields = ['seats_taken', 'seats_total']
+
+    def save(self, restaurant_id):
+        seats_taken = self.cleaned_data['seats_taken']
+        seats_total = self.cleaned_data['seats_total']
+
+        occ = Occupation(restaurant=Restaurant.objects.get(id=restaurant_id),
+                         seats_taken=seats_taken,
+                         seats_total=seats_total,
+                         date_declared=datetime.datetime.now())
+
+        occ.save()
+
+        return occ
+
+    def is_valid(self):
+        validity = super().is_valid()
+
+        return self.cleaned_data['seats_taken'] <= self.cleaned_data['seats_total'] and validity

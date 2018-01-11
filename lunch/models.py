@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator
 from django.db import models
 from model_utils import Choices
 from model_utils.fields import StatusField
@@ -15,8 +16,8 @@ class Restaurant(models.Model):
 class Occupation(models.Model):
     restaurant = models.ForeignKey(Restaurant, on_delete=models.deletion.CASCADE)
 
-    seats_taken = models.IntegerField(default=0)
-    seats_total = models.IntegerField(default=0)
+    seats_taken = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    seats_total = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     date_declared = models.DateField(editable=False)
 
 
