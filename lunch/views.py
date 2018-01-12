@@ -142,7 +142,7 @@ class restaurants_view(TemplateView):
         context['restaurant_contexts'] = restaurant_contexts
         context['seat_form'] = lunch_forms.SeatsOccupiedForm()
 
-        return render(request, 'lunch/lunch.html', context)
+    return render(request, 'lunch/lunch_menus.html', context)
 
 
 def seats(request):
@@ -200,3 +200,35 @@ def download_data(request):
     data = serializers.serialize('json', posts)
 
     return JsonResponse(data, safe=False)
+
+
+def vote(request):
+    logger.info("vote view requested")
+
+    if not request.user.is_authenticated():
+        return JsonResponse(
+            status=400,
+            data={"error": "login required to vote"}
+        )
+
+    if request.method == 'POST':
+        form = lunch_forms.VoteForm(request.POST)
+
+        if form.is_valid():
+            context = form.save(request.user)
+
+            if not context["error"]:
+                return JsonResponse(context)
+            else:
+                return JsonResponse(
+                    status=400,
+                    data=context
+                )
+        else:
+            err_msg = "vote form validation failed"
+            logger.warning(err_msg)
+
+            return JsonResponse(
+                status=400,
+                data={"error": err_msg}
+            )

@@ -15,4 +15,5 @@ urlpatterns = [
     url(r'^logout/$', auth_views.LogoutView.as_view(), name='logout'),
     url(r'^download/$', views.download_data, name='download'),
     url(r'^post_seats$', views.seats, name='seats_taken'),
+    url(r'^vote/$', views.vote, name='vote'),
 ]
