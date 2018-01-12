@@ -14,5 +14,5 @@ urlpatterns = [
     url(r'^login/$', auth_views.LoginView.as_view(template_name='accounts/login.html'), name='login'),
     url(r'^logout/$', auth_views.LogoutView.as_view(), name='logout'),
     url(r'^download/$', views.download_data, name='download'),
-    url(r'^post_seats$', views.restaurants_view.as_view(), name='seats_taken'),
+    url(r'^post_seats$', views.seats, name='seats_taken'),
 ]

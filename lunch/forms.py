@@ -90,7 +90,7 @@ class SeatsOccupiedForm(forms.ModelForm):
 
         occ.save()
 
-        return occ
+        return {'seats': occ }
 
     def is_valid(self):
         validity = super().is_valid()

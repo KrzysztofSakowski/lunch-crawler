@@ -109,9 +109,6 @@ def about_view(request):
 class restaurants_view(TemplateView):
     template_name = 'lunch/lunch.html'
 
-    def get_context_data(self, **kwargs):
-        return {}
-
     def get(self, request, *args, **kwargs):
         logger.info("Index requested")
 
@@ -152,15 +149,19 @@ class restaurants_view(TemplateView):
         return self.render_to_response(context)
         # return render(request, 'lunch/lunch.html', context)
 
-    def post(self, request, *args, **kwargs):
-        seats_form = lunch_forms.SeatsOccupiedForm(request.POST)
-        if seats_form.is_valid():
-            logger.debug('seats form valid')
-            availability = seats_form.save(5)
-            return self.render_to_response(self.get_context_data())
-        else:
-            logger.debug('seats form not valid')
-            return self.render_to_response(self.get_context_data(seat_form=seats_form))
+def seats(request):
+    seats_form = lunch_forms.SeatsOccupiedForm(request.POST)
+
+    if not request.user.is_authenticated():
+        return JsonResponse(status=400)
+
+    if seats_form.is_valid():
+        logger.debug('seats form valid')
+        availability = seats_form.save(5)
+        return JsonResponse(status=200)
+    else:
+        logger.debug('seats form not valid')
+        return JsonResponse(status=400)
 
 
 def signup_view(request):

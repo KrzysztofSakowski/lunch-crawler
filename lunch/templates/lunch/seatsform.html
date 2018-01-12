@@ -1,13 +1,9 @@
 {% block seats %}
     {% load widget_tweaks %}
-    <form method="POST" action="./" novalidate>
+    <form method="POST" action="{% url 'seats_taken' %}" id='{{ restaurant.id }}' class="seats_vote" >
         {% csrf_token %}
-        <p>{{ restaurant.id }}</p>
         {% include '../form.html' %}
-{#        {% for field in form %}#}
-{#            {{ field.label_tag }}#}
-{#            {% render_field field class="form-control is-valid" %}#}
-{#        {% endfor %}#}
         <button type="submit" class="btn btn-primary">Zgłoś</button>
     </form>
 {% endblock %}
+
