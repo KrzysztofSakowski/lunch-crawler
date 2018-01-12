@@ -25,17 +25,6 @@ from .models import Restaurant, FacebookPost, UserProfile, Occupation
 logger = logging.getLogger("logger")
 
 
-def running_average():
-    total = 0.0
-    counter = 0
-    average = None
-    while True:
-        term = yield average
-        total += term
-        counter += 1
-        average = total / counter
-
-
 def save_posts(restaurant, posts):
     logger.info(f"For {restaurant}: {len(posts)} posts are going be saved to db")
 
