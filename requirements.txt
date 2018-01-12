@@ -7,6 +7,7 @@ django-widget-tweaks
 facebook-sdk==2.0.0
 gunicorn==19.6.0
 idna==2.6
+pandas
 psycopg2==2.7.3.2
 python-dateutil==2.6.1
 pytz==2017.3

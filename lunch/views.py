@@ -1,6 +1,7 @@
 import datetime
 import logging
 import dateutil.parser
+import pandas as pd
 from collections import namedtuple
 
 from django.contrib.admin.views.decorators import staff_member_required
@@ -109,6 +110,14 @@ def about_view(request):
 class restaurants_view(TemplateView):
     template_name = 'lunch/lunch.html'
 
+    def calcAvgOcc(self, restaurant):
+        objs = pd.DataFrame(list(Occupation.objects.filter(restaurant=restaurant, date_declared=datetime.datetime.now()).values()))
+        if not objs.empty:
+            result = namedtuple('seats', ["taken", "total"])
+            return result(int(objs['seats_taken'].mean()), int(objs['seats_total'].mean()))
+        else:
+            return None
+
     def get(self, request, *args, **kwargs):
         logger.info("Index requested")
 
@@ -134,8 +143,7 @@ class restaurants_view(TemplateView):
 
             RestaurantContext = namedtuple('RestaurantContext', ["menu", "seats_availability"])
             try:
-                # seats_availability = Occupation.objects.get(restaurant=restaurant)
-                raise ObjectDoesNotExist
+                seats_availability = self.calcAvgOcc(restaurant)
             except ObjectDoesNotExist:
                 seats_availability = None
             restaurant_contexts[restaurant] = RestaurantContext(menu, seats_availability)
@@ -144,24 +152,27 @@ class restaurants_view(TemplateView):
 
         context = self.get_context_data(**kwargs)
         context['restaurant_contexts'] = restaurant_contexts
-        context['seat_form'] = lunch_forms.SeatsOccupiedForm(request.GET or None)
+        context['seat_form'] = lunch_forms.SeatsOccupiedForm()
 
-        return self.render_to_response(context)
-        # return render(request, 'lunch/lunch.html', context)
+        return render(request, 'lunch/lunch.html', context)
+
 
 def seats(request):
     seats_form = lunch_forms.SeatsOccupiedForm(request.POST)
 
     if not request.user.is_authenticated():
-        return JsonResponse(status=400)
+        return JsonResponse(data={"error": "login required"},
+                            status=400)
 
     if seats_form.is_valid():
         logger.debug('seats form valid')
-        availability = seats_form.save(5)
-        return JsonResponse(status=200)
+        seats_form.save(int(request.POST['restaurant_id']))
+        return JsonResponse(
+            data={'seats_taken': request.POST['seats_taken'], 'restaurant_id': request.POST['restaurant_id']})
     else:
         logger.debug('seats form not valid')
-        return JsonResponse(status=400)
+        return JsonResponse(data={"error": "form invalid"},
+                            status=400)
 
 
 def signup_view(request):
@@ -200,4 +211,3 @@ def download_data(request):
     data = serializers.serialize('json', posts)
 
     return JsonResponse(data, safe=False)
-

@@ -8,7 +8,12 @@
             {% for restaurant, restaurant_context in restaurant_contexts.items %}
                 <div class="col-lg-4">
                     <h2>{{ restaurant.name }}</h2>
-                    <p>Oblozenie: {{ restaurant_context.seat_availability }} </p>
+                    {% if restaurant_context.seats_availability %}
+                        <p>Oblozenie: {{ restaurant_context.seats_availability.taken }}
+                            / {{ restaurant_context.seats_availability.total }} </p>
+                    {% else %}
+                        <p>Brak danych o obłożeniu na dziś</p>
+                    {% endif %}
                     {% if restaurant_context.menu %}
                         <p>{{ restaurant_context.menu.message|linebreaks }}</p>
                         <p><a class="btn btn-primary"
@@ -26,37 +31,39 @@
         </div>
     </main>
 
-<script type="text/javascript">
-    var frm = $('.seats_vote');
-    frm.submit(function () {
-        var formData = new FormData();
+{% endblock %}
+{% block seats_script %}
+    <script type="text/javascript">
+        var frm = $('.seats_vote');
+        frm.submit(function () {
+            var formData = new FormData();
 
-        var restaurant_id = $(this).prop('id');
-        var seats_taken = $(this).find('input[name=seats_taken]').val();
-        var seats_total = $(this).find('input[name=seats_total]').val();
-        var csrfmiddlewaretoken = $(this).find('input[name=csrfmiddlewaretoken]').val();
+            var restaurant_id = $(this).prop('id');
+            var seats_taken = $(this).find('input[name=seats_taken]').val();
+            var seats_total = $(this).find('input[name=seats_total]').val();
+            var csrfmiddlewaretoken = $(this).find('input[name=csrfmiddlewaretoken]').val();
 
-        formData.append("restaurant_id", restaurant_id);
-        formData.append("seats_taken", 111); //seats_taken);
-        formData.append("seats_total", seats_total);
-        formData.append("csrfmiddlewaretoken", csrfmiddlewaretoken);
+            formData.append("restaurant_id", restaurant_id);
+            formData.append("seats_taken", seats_taken);
+            formData.append("seats_total", seats_total);
+            formData.append("csrfmiddlewaretoken", csrfmiddlewaretoken);
 
-        $.ajax({
-            type: frm.attr('method'),
-            url: frm.attr('action'),
-            processData: false,
-            contentType: false,
-            cache: false,
-            data: formData,
-            success: function (data) {
-                console.log("submit success", data.seats_taken);
-                $('#' + restaurant_id + ' p.rating').text("placeholder: ");
-            },
-            error: function (data) {
-                console.log("submit error: ", data.responseJSON.error);
-            }
+            $.ajax({
+                type: frm.attr('method'),
+                url: frm.attr('action'),
+                processData: false,
+                contentType: false,
+                cache: false,
+                data: formData,
+                success: function (data) {
+                    console.log("submit success", data.seats_taken);
+                    $('#' + restaurant_id + ' p.rating').text("placeholder: ");
+                },
+                error: function (data) {
+                    console.log("submit error: ", data.responseJSON.error);
+                }
+            });
+            return false;
         });
-        return false;
-    });
-</script>
+    </script>
 {% endblock %}
