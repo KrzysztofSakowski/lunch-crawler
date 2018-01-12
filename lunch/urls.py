@@ -8,7 +8,7 @@ urlpatterns = [
     url(r'^$', RedirectView.as_view(url=r'restaurants/example/'), name='index'),
     url(r'^about/$', views.about_view, name='about'),
     url(r'^restaurants/$', views.RestaurantsView.as_view(), name='restaurants'),
-    url(r'^restaurants/example/$', views.RestaurantsView.as_view(), name='restaurants_example'),
+    url(r'^restaurants/example/$', views.ExampleRestaurantsView.as_view(), name='restaurants_example'),
     url(r'^add_restaurant/$', views.add_restaurant_view, name='add_restaurant'),
     url(r'^signup/$', views.signup_view, name='signup'),
     url(r'^login/$', auth_views.LoginView.as_view(template_name='accounts/login.html'), name='login'),

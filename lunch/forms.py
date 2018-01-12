@@ -113,10 +113,8 @@ class SeatsOccupiedForm(forms.ModelForm):
 
     def is_valid(self):
         validity = super().is_valid()
-        if self.cleaned_data['seats_taken'] >= self.cleaned_data['seats_total']:
-            self.fields['seats_taken'].errors = {'integrity': "more taken than total"}
-            return False
-        return validity
+
+        return validity and self.cleaned_data.get('seats_taken', None) <= self.cleaned_data.get('seats_total', None)
 
 
 class VoteForm(forms.Form):

@@ -91,32 +91,45 @@ def crawl_facebook(restaurant, facebook):
 
     save_posts(restaurant=restaurant, posts=posts)
 
+
 def calc_avg_occupation(restaurant):
-    objs = pd.DataFrame(list(Occupation.objects.filter(restaurant=restaurant, date_declared=datetime.datetime.now()).values()))
+    objs = pd.DataFrame(
+        list(Occupation.objects.filter(restaurant=restaurant, date_declared=datetime.datetime.now()).values()))
     if not objs.empty:
         result = namedtuple('seats', ["taken", "total"])
         return result(int(objs['seats_taken'].mean()), int(objs['seats_total'].mean()))
     else:
         return None
 
+
 def about_view(request):
     return render(request, 'lunch/about.html')
 
 
+class NotLoggedIn(Exception):
+    def __init___(self):
+        super(NotLoggedIn, self).__init__(self, "User was not logged in")
+
+
 class RestaurantsView(TemplateView):
     template_name = 'lunch/lunch_menus.html'
+    get_method_log_info = "RestaurantsView view requested"
 
-    def get(self, request, *args, **kwargs):
-        logger.info("RestaurantsView view requested")
-
-        if 'example' in resolve(request.path).url_name:
-            restaurants = Restaurant.objects.all()
-        elif request.user.is_authenticated():
-
-            user_profile = UserProfile.objects.get(user=request.user)
-
+    def provide_restaurants(self, user=None):
+        if user.is_authenticated():
+            user_profile = UserProfile.objects.get(user=user)
             restaurants = user_profile.restaurants.all()
         else:
+            raise NotLoggedIn
+
+        return restaurants
+
+    def get(self, request, *args, **kwargs):
+        logger.info(self.get_method_log_info)
+
+        try:
+            restaurants = self.provide_restaurants(request.user)
+        except NotLoggedIn:
             return redirect_to_login(
                 request.get_full_path(), resolve_url('/login/'), 'next')
 
@@ -142,6 +155,14 @@ class RestaurantsView(TemplateView):
         return render(request, self.template_name, context)
 
 
+class ExampleRestaurantsView(RestaurantsView):
+    template_name = 'lunch/lunch_menus.html'
+    get_method_log_info = "ExampleRestaurantsView view requested"
+
+    def provide_restaurants(self, user=None):
+        return Restaurant.objects.all()
+
+
 def seats(request):
     seats_form = lunch_forms.SeatsOccupiedForm(request.POST)
 
@@ -154,7 +175,8 @@ def seats(request):
         seats_form.save(int(request.POST['restaurant_id']))
         new_availability = calc_avg_occupation(Restaurant.objects.get(id=int(request.POST['restaurant_id'])))
         return JsonResponse(
-            data={'seats_taken': new_availability.taken, 'seats_total': new_availability.total, 'restaurant_id': request.POST['restaurant_id']})
+            data={'seats_taken': new_availability.taken, 'seats_total': new_availability.total,
+                  'restaurant_id': request.POST['restaurant_id']})
     else:
         logger.debug('seats form not valid')
         return JsonResponse(data={"error": "form invalid"},
