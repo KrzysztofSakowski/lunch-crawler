@@ -10,7 +10,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('lunch', '0004_admin_hotfix'),
+        ('lunch', '0005_post_voting'),
     ]
 
     operations = [

@@ -80,19 +80,23 @@ class SeatsOccupiedForm(forms.ModelForm):
         model = Occupation
         fields = ['seats_taken', 'seats_total']
 
-    seats_taken = forms.IntegerField(label='Miejsca zajete:', widget=forms.fields.NumberInput(attrs={
-        'placeholder': 0,
-        'class': 'form-control input-lg',
-        'default': 0,
-    }),
-                                     validators=[MinValueValidator(0)])
+    seats_taken = forms.IntegerField(
+        label='Miejsca zajete:',
+        widget=forms.fields.NumberInput(attrs={
+            'placeholder': 0,
+            'class': 'form-control input-lg',
+            'default': 0,
+        }),
+        validators=[MinValueValidator(0)])
 
-    seats_total = forms.IntegerField(label='Miejsca ogolem:', widget=forms.fields.NumberInput(attrs={
-        'placeholder': 0,
-        'class': 'form-control input-lg',
-        'default': 0,
-    }),
-                                     validators=[MinValueValidator(0)])
+    seats_total = forms.IntegerField(
+        label='Miejsca ogolem:',
+        widget=forms.fields.NumberInput(attrs={
+            'placeholder': 0,
+            'class': 'form-control input-lg',
+            'default': 0,
+        }),
+        validators=[MinValueValidator(0)])
 
     def save(self, restaurant_id):
         seats_taken = self.cleaned_data['seats_taken']
