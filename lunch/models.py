@@ -25,6 +25,9 @@ class FacebookPost(models.Model):
     vote_down = models.IntegerField(default=0)
     facebook_id = models.CharField(max_length=50, unique=True)
 
+    def rating(self):
+        return self.vote_up - self.vote_down
+
     def __str__(self):
         # facebook_id has format: [profile_id]_[post_id]
         # we extract post id
@@ -36,3 +39,6 @@ class FacebookPost(models.Model):
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.deletion.CASCADE)
     restaurants = models.ManyToManyField(Restaurant)
+
+    voted_up_on = models.ManyToManyField(FacebookPost,  related_name="voted_up_on")
+    voted_down_on = models.ManyToManyField(FacebookPost, related_name="voted_down_on")
