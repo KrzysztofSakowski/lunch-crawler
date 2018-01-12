@@ -1,0 +1,8 @@
+{% block seats %}
+  {% load widget_tweaks %}
+  <form method="POST" action="{% url 'seats_taken' %}" id='{{ restaurant.id }}' class="seats_vote">
+    {% csrf_token %}
+    {% include '../form.html' %}
+    <button type="submit" class="btn btn-primary">Zgłoś</button>
+  </form>
+{% endblock %}

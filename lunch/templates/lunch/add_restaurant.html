@@ -1,16 +1,16 @@
 {% extends 'lunch/base.html' %}
 
 {% block title %}
-    Dodaj restauracje
+  Dodaj restauracje
 {% endblock %}
 
 {% block content %}
-    <div class="container">
-        <h2>Restauracje</h2>
-        <form method="post" novalidate>
-            {% csrf_token %}
-            {% include '../form.html' %}
-            <button type="submit" class="btn btn-primary">Dodaj restauracje</button>
-        </form>
-    </div>
+  <div class="container">
+    <h2>Restauracje</h2>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% include '../form.html' %}
+      <button type="submit" class="btn btn-primary">Dodaj restauracje</button>
+    </form>
+  </div>
 {% endblock %}

@@ -1,16 +1,16 @@
 {% extends 'lunch/base.html' %}
 
 {% block content %}
-    <div class="jumbotron">
-        <h1 class="display-3">Witaj!</h1>
-        <p class="lead">Tu może być lista twoich ulubionych restauracji!</p>
-        <hr class="my-4">
-        <p>Przykład poniżej:</p>
-        <p class="lead">
-            <a class="btn btn-primary btn-lg" href="{% url 'restaurants_example' %}" role="button">Przykład</a>
-        </p>
-        <p class="lead">
-            <a class="btn btn-primary btn-lg" href="{% url 'add_restaurant' %}" role="button">Albo dodaj swoją!</a>
-        </p>
-    </div>
+  <div class="jumbotron">
+    <h1 class="display-3">Witaj!</h1>
+    <p class="lead">Tu może być lista twoich ulubionych restauracji!</p>
+    <hr class="my-4">
+    <p>Przykład poniżej:</p>
+    <p class="lead">
+      <a class="btn btn-primary btn-lg" href="{% url 'restaurants_example' %}" role="button">Przykład</a>
+    </p>
+    <p class="lead">
+      <a class="btn btn-primary btn-lg" href="{% url 'add_restaurant' %}" role="button">Albo dodaj swoją!</a>
+    </p>
+  </div>
 {% endblock %}

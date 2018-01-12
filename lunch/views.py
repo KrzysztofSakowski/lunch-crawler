@@ -1,11 +1,14 @@
 import datetime
 import logging
 import dateutil.parser
+import pandas as pd
+from collections import namedtuple
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import redirect_to_login
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import resolve
 from django.db.utils import IntegrityError
 from django.shortcuts import redirect, resolve_url
@@ -13,11 +16,11 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.core import serializers
 from django.http import JsonResponse
+from django.views.generic import TemplateView, FormView
 
 import lunch.forms as lunch_forms
 from .facebook_api import FacebookFactory
-from .models import Restaurant, FacebookPost, UserProfile
-
+from .models import Restaurant, FacebookPost, UserProfile, Occupation
 
 logger = logging.getLogger("logger")
 
@@ -88,41 +91,74 @@ def crawl_facebook(restaurant, facebook):
 
     save_posts(restaurant=restaurant, posts=posts)
 
+def calc_avg_occupation(restaurant):
+    objs = pd.DataFrame(list(Occupation.objects.filter(restaurant=restaurant, date_declared=datetime.datetime.now()).values()))
+    if not objs.empty:
+        result = namedtuple('seats', ["taken", "total"])
+        return result(int(objs['seats_taken'].mean()), int(objs['seats_total'].mean()))
+    else:
+        return None
 
 def about_view(request):
     return render(request, 'lunch/about.html')
 
 
-def restaurants_view(request):
-    logger.info("restaurants_view view requested")
+class RestaurantsView(TemplateView):
+    template_name = 'lunch/lunch_menus.html'
 
-    if 'example' in resolve(request.path).url_name:
-        restaurants = Restaurant.objects.all()
-    elif request.user.is_authenticated():
+    def get(self, request, *args, **kwargs):
+        logger.info("RestaurantsView view requested")
 
-        user_profile = UserProfile.objects.get(user=request.user)
+        if 'example' in resolve(request.path).url_name:
+            restaurants = Restaurant.objects.all()
+        elif request.user.is_authenticated():
 
-        restaurants = user_profile.restaurants.all()
-    else:
-        return redirect_to_login(
-            request.get_full_path(), resolve_url('/login/'), 'next')
+            user_profile = UserProfile.objects.get(user=request.user)
 
-    menus = {}
+            restaurants = user_profile.restaurants.all()
+        else:
+            return redirect_to_login(
+                request.get_full_path(), resolve_url('/login/'), 'next')
 
-    for restaurant in restaurants:
-        menu = find_in_db(restaurant)
+        restaurant_contexts = {}
 
-        if not menu:
-            crawl_facebook(restaurant, FacebookFactory.create())
+        for restaurant in restaurants:
             menu = find_in_db(restaurant)
 
-        menus[restaurant] = menu
+            if not menu:
+                crawl_facebook(restaurant, FacebookFactory.create())
+                menu = find_in_db(restaurant)
 
-    context = {
-        'menus': menus
-    }
+            RestaurantContext = namedtuple('RestaurantContext', ["menu", "seats_availability"])
+            seats_availability = calc_avg_occupation(restaurant)
+            restaurant_contexts[restaurant] = RestaurantContext(menu, seats_availability)
 
-    return render(request, 'lunch/lunch_menus.html', context)
+            logger.info(restaurant_contexts[restaurant])
+
+        context = self.get_context_data(**kwargs)
+        context['restaurant_contexts'] = restaurant_contexts
+        context['seat_form'] = lunch_forms.SeatsOccupiedForm()
+
+        return render(request, self.template_name, context)
+
+
+def seats(request):
+    seats_form = lunch_forms.SeatsOccupiedForm(request.POST)
+
+    if not request.user.is_authenticated():
+        return JsonResponse(data={"error": "login required"},
+                            status=400)
+
+    if seats_form.is_valid():
+        logger.debug('seats form valid')
+        seats_form.save(int(request.POST['restaurant_id']))
+        new_availability = calc_avg_occupation(Restaurant.objects.get(id=int(request.POST['restaurant_id'])))
+        return JsonResponse(
+            data={'seats_taken': new_availability.taken, 'seats_total': new_availability.total, 'restaurant_id': request.POST['restaurant_id']})
+    else:
+        logger.debug('seats form not valid')
+        return JsonResponse(data={"error": "form invalid"},
+                            status=400)
 
 
 def signup_view(request):
