@@ -103,11 +103,11 @@ def about_view(request):
     return render(request, 'lunch/about.html')
 
 
-class restaurants_view(TemplateView):
-    template_name = 'lunch/lunch.html'
+class RestaurantsView(TemplateView):
+    template_name = 'lunch/lunch_menus.html'
 
     def get(self, request, *args, **kwargs):
-        logger.info("Index requested")
+        logger.info("RestaurantsView view requested")
 
         if 'example' in resolve(request.path).url_name:
             restaurants = Restaurant.objects.all()
@@ -142,7 +142,7 @@ class restaurants_view(TemplateView):
         context['restaurant_contexts'] = restaurant_contexts
         context['seat_form'] = lunch_forms.SeatsOccupiedForm()
 
-    return render(request, 'lunch/lunch_menus.html', context)
+        return render(request, self.template_name, context)
 
 
 def seats(request):

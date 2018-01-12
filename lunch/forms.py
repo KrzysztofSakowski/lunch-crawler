@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.db.models.functions import datetime
 from django.db import IntegrityError, transaction
 
@@ -83,13 +84,15 @@ class SeatsOccupiedForm(forms.ModelForm):
         'placeholder': 0,
         'class': 'form-control input-lg',
         'default': 0,
-    }))
+    }),
+                                     validators=[MinValueValidator(0)])
 
     seats_total = forms.IntegerField(label='Miejsca ogolem:', widget=forms.fields.NumberInput(attrs={
         'placeholder': 0,
         'class': 'form-control input-lg',
         'default': 0,
-    }))
+    }),
+                                     validators=[MinValueValidator(0)])
 
     def save(self, restaurant_id):
         seats_taken = self.cleaned_data['seats_taken']
@@ -102,12 +105,14 @@ class SeatsOccupiedForm(forms.ModelForm):
 
         occ.save()
 
-        return {'seats': occ }
+        return {'seats': occ}
 
     def is_valid(self):
         validity = super().is_valid()
-
-        return self.cleaned_data['seats_taken'] <= self.cleaned_data['seats_total'] and validity
+        if self.cleaned_data['seats_taken'] >= self.cleaned_data['seats_total']:
+            self.fields['seats_taken'].errors = {'integrity': "more taken than total"}
+            return False
+        return validity
 
 
 class VoteForm(forms.Form):

@@ -3,76 +3,122 @@
 {% load static %}
 
 {% block content %}
-  <main role="main" class="container">
-    <div class="row">
-      {% for restaurant, menu in menus.items %}
-        <div class="col-lg-4" id="{{ menu.facebook_id }}">
-          <h2>{{ restaurant.name }}</h2>
-          {% if menu %}
-            <p>{{ menu.message|linebreaks }}</p>
-            <p class="rating">Ocena: {{ menu.rating }}</p>
-            <div class="btn-group">
-              {% with 'true false' as list %}
-                {% for is_up_vote in list.split %}
-                  <form action="{% url 'vote' %}" method="post" id="{{ menu.facebook_id }}" class="vote_lunch">
-                    {% csrf_token %}
-                    <input type='hidden'
-                           name='is_up_vote'
-                           value='{{ is_up_vote }}'/>
-                    {% if is_up_vote == "true" %}
-                      <button type="submit" class="btn btn-success">+</button>
+    <main role="main" class="container">
+        <div class="row">
+        {% for restaurant, restaurant_context in restaurant_contexts.items %}
+                <div class="col-lg-4" id="{{ restaurant_context.menu.facebook_id }}">
+                    <h2>{{ restaurant.name }}</h2>
+                    <div id="{{ restaurant.id }}">
+                        <p class="seats">
+                            {% if restaurant_context.seats_availability %}
+                                Oblozenie: {{ restaurant_context.seats_availability.taken }}
+                                / {{ restaurant_context.seats_availability.total }}
+                            {% else %}
+                                Brak danych o obłożeniu na dziś
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% if restaurant_context.menu %}
+                        <p>{{ restaurant_context.menu.message|linebreaks }}</p>
+                        <p class="rating">Ocena: {{ restaurant_context.menu.rating }}</p>
+                        <div class="btn-group">
+                            {% with 'true false' as list %}
+                                {% for is_up_vote in list.split %}
+                                    <form action="{% url 'vote' %}" method="post" id="{{ restaurant_context.menu.facebook_id }}"
+                                          class="vote_lunch">
+                                        {% csrf_token %}
+                                        <input type='hidden'
+                                               name='is_up_vote'
+                                               value='{{ is_up_vote }}'/>
+                                        {% if is_up_vote == "true" %}
+                                            <button type="submit" class="btn btn-success">+</button>
+                                        {% else %}
+                                            <button type="submit" class="btn btn-danger">-</button>
+                                        {% endif %}
+                                    </form>
+                                {% endfor %}
+                            {% endwith %}
+                            <p><a class="btn btn-primary" href="https://facebook.com/{{ restaurant_context.menu.facebook_id }}"
+                                  role="button">Post
+                                na fb &raquo;</a></p>
+                        </div>
                     {% else %}
-                      <button type="submit" class="btn btn-danger">-</button>
+                        <div class="alert alert-danger" role="alert">
+                            Restauracja nie dodała jeszcze menu.
+                        </div>
                     {% endif %}
-                  </form>
-                {% endfor %}
-              {% endwith %}
-              <p><a class="btn btn-primary" href="https://facebook.com/{{ menu.facebook_id }}"
-                    role="button">Post
-                na fb &raquo;</a></p>
-            </div>
-          {% else %}
-            <div class="alert alert-danger" role="alert">
-              Restauracja nie dodała jeszcze menu.
-            </div>
-          {% endif %}
+                    {% include 'lunch/seatsform.html' with form=seat_form %}
+                </div>
+            {% endfor %}
         </div>
-      {% endfor %}
-    </div>
-  </main>
+    </main>
 {% endblock %}
 
 {% block custom_scripts %}
-  <script type="text/javascript">
-      var frm = $('.vote_lunch');
-      frm.submit(function () {
-          var formData = new FormData();
+    <script type="text/javascript">
+        var frm = $('.vote_lunch');
+        frm.submit(function () {
+            var formData = new FormData();
 
-          var post_id = $(this).prop('id');
-          var is_up_vote = $(this).find('input[name=is_up_vote]').val();
-          var csrfmiddlewaretoken = $(this).find('input[name=csrfmiddlewaretoken]').val();
+            var post_id = $(this).prop('id');
+            var is_up_vote = $(this).find('input[name=is_up_vote]').val();
+            var csrfmiddlewaretoken = $(this).find('input[name=csrfmiddlewaretoken]').val();
 
-          formData.append("is_up_vote", is_up_vote);
-          formData.append("post_id", post_id);
-          formData.append("csrfmiddlewaretoken", csrfmiddlewaretoken);
+            formData.append("is_up_vote", is_up_vote);
+            formData.append("post_id", post_id);
+            formData.append("csrfmiddlewaretoken", csrfmiddlewaretoken);
 
-          $.ajax({
-              type: frm.attr('method'),
-              url: frm.attr('action'),
-              processData: false,
-              contentType: false,
-              cache: false,
-              data: formData,
-              success: function (data) {
-                  console.log("submit success", data.rating);
-                  $('#' + post_id + ' p.rating').text("Ocena: " + data.rating);
-              },
-              error: function (data) {
-                  console.log("submit error: ", data.responseJSON.error);
-                  alert(data.responseJSON.error);
-              }
-          });
-          return false;
-      });
-  </script>
+            $.ajax({
+                type: frm.attr('method'),
+                url: frm.attr('action'),
+                processData: false,
+                contentType: false,
+                cache: false,
+                data: formData,
+                success: function (data) {
+                    console.log("submit success", data.rating);
+                    $('#' + post_id + ' p.rating').text("Ocena: " + data.rating);
+                },
+                error: function (data) {
+                    console.log("submit error: ", data.responseJSON.error);
+                    alert(data.responseJSON.error);
+                }
+            });
+            return false;
+        });
+    </script>
+    <script type="text/javascript">
+        var frm = $('.seats_vote');
+        frm.submit(function () {
+            var formData = new FormData();
+
+            var restaurant_id = $(this).prop('id');
+            var seats_taken = $(this).find('input[name=seats_taken]').val();
+            var seats_total = $(this).find('input[name=seats_total]').val();
+            var csrfmiddlewaretoken = $(this).find('input[name=csrfmiddlewaretoken]').val();
+
+            formData.append("restaurant_id", restaurant_id);
+            formData.append("seats_taken", seats_taken);
+            formData.append("seats_total", seats_total);
+            formData.append("csrfmiddlewaretoken", csrfmiddlewaretoken);
+
+            $.ajax({
+                type: frm.attr('method'),
+                url: frm.attr('action'),
+                processData: false,
+                contentType: false,
+                cache: false,
+                data: formData,
+                success: function (data) {
+                    console.log("submit success", data.seats_taken);
+                    $('#' + restaurant_id + ' p.seats').text("Oblozenie: " + data.seats_taken + ' / ' + data.seats_total);
+                },
+                error: function (data) {
+                    console.log("submit error: ", data.responseJSON.error);
+                    alert(data.responseJSON.error);
+                }
+            });
+            return false;
+        });
+    </script>
 {% endblock %}
