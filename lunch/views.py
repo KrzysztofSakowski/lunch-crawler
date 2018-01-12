@@ -8,7 +8,6 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import redirect_to_login
-from django.core.urlresolvers import resolve
 from django.db.utils import IntegrityError
 from django.shortcuts import redirect, resolve_url
 from django.shortcuts import render
@@ -117,11 +116,12 @@ def crawl_facebook(restaurant, facebook):
 
 
 def calc_avg_occupation(restaurant):
-    objs = pd.DataFrame(
+    objects = pd.DataFrame(
         list(Occupation.objects.filter(restaurant=restaurant, date_declared=datetime.now()).values()))
-    if not objs.empty:
+
+    if not objects.empty:
         result = namedtuple('seats', ["taken", "total"])
-        return result(int(objs['seats_taken'].mean()), int(objs['seats_total'].mean()))
+        return result(int(objects['seats_taken'].mean()), int(objects['seats_total'].mean()))
     else:
         return None
 
@@ -130,20 +130,30 @@ def about_view(request):
     return render(request, 'lunch/about.html')
 
 
+class NotLoggedIn(Exception):
+    def __init___(self):
+        super(NotLoggedIn, self).__init__(self, "User was not logged in")
+
+
 class RestaurantsView(TemplateView):
     template_name = 'lunch/lunch_menus.html'
+    get_method_log_info = "RestaurantsView view requested"
 
-    def get(self, request, *args, **kwargs):
-        logger.info("RestaurantsView view requested")
-
-        if 'example' in resolve(request.path).url_name:
-            restaurants = Restaurant.objects.all()
-        elif request.user.is_authenticated():
-
-            user_profile = UserProfile.objects.get(user=request.user)
-
+    def provide_restaurants(self, user=None):
+        if user.is_authenticated():
+            user_profile = UserProfile.objects.get(user=user)
             restaurants = user_profile.restaurants.all()
         else:
+            raise NotLoggedIn
+
+        return restaurants
+
+    def get(self, request, *args, **kwargs):
+        logger.info(self.get_method_log_info)
+
+        try:
+            restaurants = self.provide_restaurants(request.user)
+        except NotLoggedIn:
             return redirect_to_login(
                 request.get_full_path(), resolve_url('/login/'), 'next')
 
@@ -167,6 +177,14 @@ class RestaurantsView(TemplateView):
         context['seat_form'] = lunch_forms.SeatsOccupiedForm()
 
         return render(request, self.template_name, context)
+
+
+class ExampleRestaurantsView(RestaurantsView):
+    template_name = 'lunch/lunch_menus.html'
+    get_method_log_info = "ExampleRestaurantsView view requested"
+
+    def provide_restaurants(self, user=None):
+        return Restaurant.objects.all()
 
 
 def seats(request):
