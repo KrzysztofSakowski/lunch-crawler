@@ -9,7 +9,7 @@ http://lunchcrawler.herokuapp.com
 * Krzysztof Sakowski
 * Damian Goworko
 
-## Project scope
+## Project scope:
 * daily fetch posts from restaurant facebook profiles and other sources
 * among posts find best candidate for today's menu or report there is none
 * present result on web interface
@@ -25,4 +25,3 @@ http://lunchcrawler.herokuapp.com
 * framework: Django https://www.djangoproject.com/
 * continuous integration: travis ci https://travis-ci.org
 * hosting: https://www.heroku.com
-* error monitor: https://sentry.io

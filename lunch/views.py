@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, time, date, timedelta
 import logging
 import dateutil.parser
 import pandas as pd
@@ -8,21 +8,37 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import redirect_to_login
-from django.core.exceptions import ObjectDoesNotExist
-from django.core.urlresolvers import resolve
 from django.db.utils import IntegrityError
 from django.shortcuts import redirect, resolve_url
 from django.shortcuts import render
 from django.urls import reverse
 from django.core import serializers
 from django.http import JsonResponse
-from django.views.generic import TemplateView, FormView
+from django.views.generic import TemplateView
+from django.utils.timezone import make_aware
 
 import lunch.forms as lunch_forms
 from .facebook_api import FacebookFactory
 from .models import Restaurant, FacebookPost, UserProfile, Occupation
 
 logger = logging.getLogger("logger")
+
+
+class TimeRangeValue:
+    def __init__(self, take_yesterday=False):
+        date_of_range = date.today()
+
+        if take_yesterday:
+            date_of_range = date_of_range - timedelta(days=1)
+
+        self._begging = make_aware(datetime.combine(date_of_range, time.min))
+        self._end = make_aware(datetime.combine(date_of_range, time.max))
+
+    def beginning(self):
+        return self._begging
+
+    def end(self):
+        return self._end
 
 
 def save_posts(restaurant, posts):
@@ -52,9 +68,16 @@ def find_in_db(restaurant):
     query = FacebookPost.objects.filter(
         restaurant=restaurant,
     )
+
+    time_range = TimeRangeValue()
+
     query = query.filter(
-        created_date__date=datetime.date.today()
+        created_date__gte=time_range.beginning()
     )
+    query = query.filter(
+        created_date__lte=time_range.end()
+    )
+
     query = query.exclude(
         is_lunch="confirmed_not"
     )
@@ -93,11 +116,12 @@ def crawl_facebook(restaurant, facebook):
 
 
 def calc_avg_occupation(restaurant):
-    objs = pd.DataFrame(
-        list(Occupation.objects.filter(restaurant=restaurant, date_declared=datetime.datetime.now()).values()))
-    if not objs.empty:
+    objects = pd.DataFrame(
+        list(Occupation.objects.filter(restaurant=restaurant, date_declared=datetime.now()).values()))
+
+    if not objects.empty:
         result = namedtuple('seats', ["taken", "total"])
-        return result(int(objs['seats_taken'].mean()), int(objs['seats_total'].mean()))
+        return result(int(objects['seats_taken'].mean()), int(objects['seats_total'].mean()))
     else:
         return None
 
