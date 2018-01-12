@@ -130,10 +130,7 @@ class RestaurantsView(TemplateView):
                 menu = find_in_db(restaurant)
 
             RestaurantContext = namedtuple('RestaurantContext', ["menu", "seats_availability"])
-            try:
-                seats_availability = calc_avg_occupation(restaurant)
-            except ObjectDoesNotExist:
-                seats_availability = None
+            seats_availability = calc_avg_occupation(restaurant)
             restaurant_contexts[restaurant] = RestaurantContext(menu, seats_availability)
 
             logger.info(restaurant_contexts[restaurant])
