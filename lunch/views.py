@@ -91,6 +91,13 @@ def crawl_facebook(restaurant, facebook):
 
     save_posts(restaurant=restaurant, posts=posts)
 
+def calc_avg_occupation(restaurant):
+    objs = pd.DataFrame(list(Occupation.objects.filter(restaurant=restaurant, date_declared=datetime.datetime.now()).values()))
+    if not objs.empty:
+        result = namedtuple('seats', ["taken", "total"])
+        return result(int(objs['seats_taken'].mean()), int(objs['seats_total'].mean()))
+    else:
+        return None
 
 def about_view(request):
     return render(request, 'lunch/about.html')
@@ -98,14 +105,6 @@ def about_view(request):
 
 class restaurants_view(TemplateView):
     template_name = 'lunch/lunch.html'
-
-    def calcAvgOcc(self, restaurant):
-        objs = pd.DataFrame(list(Occupation.objects.filter(restaurant=restaurant, date_declared=datetime.datetime.now()).values()))
-        if not objs.empty:
-            result = namedtuple('seats', ["taken", "total"])
-            return result(int(objs['seats_taken'].mean()), int(objs['seats_total'].mean()))
-        else:
-            return None
 
     def get(self, request, *args, **kwargs):
         logger.info("Index requested")
@@ -132,7 +131,7 @@ class restaurants_view(TemplateView):
 
             RestaurantContext = namedtuple('RestaurantContext', ["menu", "seats_availability"])
             try:
-                seats_availability = self.calcAvgOcc(restaurant)
+                seats_availability = calc_avg_occupation(restaurant)
             except ObjectDoesNotExist:
                 seats_availability = None
             restaurant_contexts[restaurant] = RestaurantContext(menu, seats_availability)
@@ -156,8 +155,9 @@ def seats(request):
     if seats_form.is_valid():
         logger.debug('seats form valid')
         seats_form.save(int(request.POST['restaurant_id']))
+        new_availability = calc_avg_occupation(Restaurant.objects.get(id=int(request.POST['restaurant_id'])))
         return JsonResponse(
-            data={'seats_taken': request.POST['seats_taken'], 'restaurant_id': request.POST['restaurant_id']})
+            data={'seats_taken': new_availability.taken, 'seats_total': new_availability.total, 'restaurant_id': request.POST['restaurant_id']})
     else:
         logger.debug('seats form not valid')
         return JsonResponse(data={"error": "form invalid"},

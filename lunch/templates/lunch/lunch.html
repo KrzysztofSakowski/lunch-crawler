@@ -8,12 +8,16 @@
             {% for restaurant, restaurant_context in restaurant_contexts.items %}
                 <div class="col-lg-4">
                     <h2>{{ restaurant.name }}</h2>
-                    {% if restaurant_context.seats_availability %}
-                        <p>Oblozenie: {{ restaurant_context.seats_availability.taken }}
-                            / {{ restaurant_context.seats_availability.total }} </p>
-                    {% else %}
-                        <p>Brak danych o obłożeniu na dziś</p>
-                    {% endif %}
+                    <div id="{{ restaurant.id }}">
+                        <p class="seats">
+                            {% if restaurant_context.seats_availability %}
+                                Oblozenie: {{ restaurant_context.seats_availability.taken }}
+                                / {{ restaurant_context.seats_availability.total }}
+                            {% else %}
+                                Brak danych o obłożeniu na dziś
+                            {% endif %}
+                        </p>
+                    </div>
                     {% if restaurant_context.menu %}
                         <p>{{ restaurant_context.menu.message|linebreaks }}</p>
                         <p><a class="btn btn-primary"
@@ -57,10 +61,11 @@
                 data: formData,
                 success: function (data) {
                     console.log("submit success", data.seats_taken);
-                    $('#' + restaurant_id + ' p.rating').text("placeholder: ");
+                    $('#' + restaurant_id + ' p.seats').text("Oblozenie: " + data.seats_taken + ' / ' + data.seats_total);
                 },
                 error: function (data) {
                     console.log("submit error: ", data.responseJSON.error);
+                    alert(data.responseJSON.error);
                 }
             });
             return false;
