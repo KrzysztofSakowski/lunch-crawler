@@ -70,7 +70,7 @@ class IndexViewTests(TestCase):
                 created_date=post.date,
                 message=post.message,
                 is_lunch=post.is_lunch,
-                facebook_id=post.post_id
+                post_id=post.post_id
             )
             facebook_post.save()
 
@@ -86,7 +86,7 @@ class IndexViewTests(TestCase):
 
         post = find_in_db(restaurant)
 
-        self.assertEqual("3", post.facebook_id)
+        self.assertEqual("3", post.post_id)
 
     def test_crawl_facebook(self):
         test_restaurant = Restaurant(
@@ -109,7 +109,7 @@ class IndexViewTests(TestCase):
 
         post_in_db = find_in_db(test_restaurant)
 
-        self.assertEqual(post_id, post_in_db.facebook_id)
+        self.assertEqual(post_id, post_in_db.post_id)
         self.assertEqual(message, post_in_db.message)
         self.assertEqual(dateutil.parser.parse(created_time), post_in_db.created_date)
 
