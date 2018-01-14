@@ -19,7 +19,7 @@ from django.utils.timezone import make_aware
 
 import lunch.forms as lunch_forms
 from .facebook_api import FacebookFactory
-from .models import Restaurant, FacebookPost, UserProfile, Occupation
+from .models import Restaurant, MenuFacebook, UserProfile, Occupation
 
 logger = logging.getLogger("logger")
 
@@ -51,7 +51,7 @@ def save_posts(restaurant, posts):
 
         date = dateutil.parser.parse(created_time)
 
-        facebook_post = FacebookPost(
+        facebook_post = MenuFacebook(
             restaurant=restaurant,
             created_date=date,
             message=menu,
@@ -65,7 +65,7 @@ def save_posts(restaurant, posts):
 
 
 def find_in_db(restaurant):
-    query = FacebookPost.objects.filter(
+    query = MenuFacebook.objects.filter(
         restaurant=restaurant,
     )
 
@@ -94,7 +94,7 @@ def find_in_db(restaurant):
 
 
 def get_post_ids(restaurant):
-    query = FacebookPost.objects.filter(
+    query = MenuFacebook.objects.filter(
         restaurant=restaurant,
     )
 
@@ -184,7 +184,12 @@ class ExampleRestaurantsView(RestaurantsView):
     get_method_log_info = "ExampleRestaurantsView view requested"
 
     def provide_restaurants(self, user=None):
-        return Restaurant.objects.all()
+        return [Restaurant.objects.get(facebook_id=id) for id in ["543608312506454",
+                                                                  "593169484049058",
+                                                                  "346442015431426",
+                                                                  "405341849804282",
+                                                                  "477554265603883",
+                                                                  "372700889466233"]]
 
 
 def seats(request):
@@ -239,7 +244,7 @@ def add_restaurant_view(request):
 
 @staff_member_required
 def download_data(request):
-    posts = FacebookPost.objects.all()
+    posts = MenuFacebook.objects.all()
     data = serializers.serialize('json', posts)
 
     return JsonResponse(data, safe=False)

@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
 from django.db import models
+from polymorphic.models import PolymorphicModel
 from model_utils import Choices
 from model_utils.fields import StatusField
 
@@ -21,7 +22,7 @@ class Occupation(models.Model):
     date_declared = models.DateField(editable=False)
 
 
-class FacebookPost(models.Model):
+class MenuBase(PolymorphicModel):
     restaurant = models.ForeignKey(Restaurant, on_delete=models.deletion.CASCADE)
 
     STATUS = Choices('confirmed', 'confirmed_not', 'unknown')
@@ -32,10 +33,13 @@ class FacebookPost(models.Model):
     report_as_not_menu = models.IntegerField(default=0)
     vote_up = models.IntegerField(default=0)
     vote_down = models.IntegerField(default=0)
-    facebook_id = models.CharField(max_length=50, unique=True)
 
     def rating(self):
         return self.vote_up - self.vote_down
+
+
+class MenuFacebook(MenuBase):
+    facebook_id = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
         # facebook_id has format: [profile_id]_[post_id]
@@ -45,9 +49,16 @@ class FacebookPost(models.Model):
         return f"{self.restaurant.name} {post_id}"
 
 
+class MenuEmail(MenuBase):
+    sender_email = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return f"{self.restaurant.name} {self.sender_email}"
+
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.deletion.CASCADE)
     restaurants = models.ManyToManyField(Restaurant)
 
-    voted_up_on = models.ManyToManyField(FacebookPost,  related_name="voted_up_on")
-    voted_down_on = models.ManyToManyField(FacebookPost, related_name="voted_down_on")
+    voted_up_on = models.ManyToManyField(MenuBase, related_name="voted_up_on")
+    voted_down_on = models.ManyToManyField(MenuBase, related_name="voted_down_on")

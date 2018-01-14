@@ -9,7 +9,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 
 from .facebook_api import FacebookFactory
-from .models import Restaurant, FacebookPost, UserProfile
+from .models import Restaurant, MenuFacebook, UserProfile
 from .views import find_in_db, crawl_facebook
 from .apps import LunchConfig
 
@@ -30,17 +30,17 @@ class IndexViewTests(TestCase):
         Restaurant.objects.filter(pk__gt=1).delete()
         restaurant = Restaurant.objects.get(id=1)
 
-        FacebookPostTuple = namedtuple('FacebookPostTuple', ['restaurant', 'date', 'message', 'is_lunch', 'post_id'])
+        MenuFacebookTuple = namedtuple('MenuFacebookTuple', ['restaurant', 'date', 'message', 'is_lunch', 'post_id'])
 
         posts = [
-            FacebookPostTuple(
+            MenuFacebookTuple(
                 restaurant=restaurant,
                 date=datetime.date.today(),
                 message="",
                 post_id="1",
                 is_lunch="confirmed_not"
             ),
-            FacebookPostTuple(
+            MenuFacebookTuple(
                 restaurant=restaurant,
                 date=datetime.date.today(),
                 message="",
@@ -48,14 +48,14 @@ class IndexViewTests(TestCase):
                 is_lunch="unknown"
 
             ),
-            FacebookPostTuple(
+            MenuFacebookTuple(
                 restaurant=restaurant,
                 date=datetime.date.today(),
                 message="",
                 post_id="3",
                 is_lunch="confirmed"
             ),
-            FacebookPostTuple(
+            MenuFacebookTuple(
                 restaurant=restaurant,
                 date=datetime.date.today(),
                 message="",
@@ -65,7 +65,7 @@ class IndexViewTests(TestCase):
         ]
 
         for post in posts:
-            facebook_post = FacebookPost(
+            facebook_post = MenuFacebook(
                 restaurant=post.restaurant,
                 created_date=post.date,
                 message=post.message,

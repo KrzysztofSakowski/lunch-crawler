@@ -1,9 +1,9 @@
 from django.contrib import admin
 
-from .models import Restaurant, FacebookPost, UserProfile, Occupation
+from .models import Restaurant, MenuFacebook, MenuEmail, UserProfile, Occupation
 
 
-class FacebookPostAdmin(admin.ModelAdmin):
+class MenuBaseAdmin(admin.ModelAdmin):
     list_display = ('id', 'restaurant', 'format_date', 'is_lunch', 'message')
     list_filter = ('restaurant', 'created_date', 'is_lunch')
     list_editable = ('is_lunch',)
@@ -46,6 +46,7 @@ class SeatAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Restaurant, RestaurantAdmin)
-admin.site.register(FacebookPost, FacebookPostAdmin)
+admin.site.register(MenuFacebook, MenuBaseAdmin)
+admin.site.register(MenuEmail, MenuBaseAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(Occupation, SeatAdmin)

@@ -47,7 +47,9 @@
               Restauracja nie dodała jeszcze menu.
             </div>
           {% endif %}
-          {% include 'lunch/seatsform.html' with form=seat_form %}
+          {% if user.is_authenticated %}
+            {% include 'lunch/seatsform.html' with form=seat_form %}
+          {% endif %}
         </div>
       {% endfor %}
     </div>
@@ -56,8 +58,8 @@
 
 {% block custom_scripts %}
   <script type="text/javascript">
-      var frm = $('.vote_lunch');
-      frm.submit(function () {
+      var vote_form = $('.vote_lunch');
+      vote_form.submit(function () {
           var formData = new FormData();
 
           var post_id = $(this).prop('id');
@@ -69,8 +71,8 @@
           formData.append("csrfmiddlewaretoken", csrfmiddlewaretoken);
 
           $.ajax({
-              type: frm.attr('method'),
-              url: frm.attr('action'),
+              type: vote_form.attr('method'),
+              url: vote_form.attr('action'),
               processData: false,
               contentType: false,
               cache: false,
@@ -86,10 +88,9 @@
           });
           return false;
       });
-  </script>
-  <script type="text/javascript">
-      var frm = $('.seats_vote');
-      frm.submit(function () {
+
+      var seats_form = $('.seats_vote');
+      seats_form.submit(function () {
           var formData = new FormData();
 
           var restaurant_id = $(this).prop('id');
@@ -103,8 +104,8 @@
           formData.append("csrfmiddlewaretoken", csrfmiddlewaretoken);
 
           $.ajax({
-              type: frm.attr('method'),
-              url: frm.attr('action'),
+              type: seats_form.attr('method'),
+              url: seats_form.attr('action'),
               processData: false,
               contentType: false,
               cache: false,

@@ -5,7 +5,7 @@ from django.core.validators import MinValueValidator
 from django.db.models.functions import datetime
 from django.db import IntegrityError, transaction
 
-from .models import Restaurant, UserProfile, Occupation, FacebookPost
+from .models import Restaurant, UserProfile, Occupation, MenuFacebook
 from .facebook_api import Facebook
 import logging
 
@@ -132,7 +132,7 @@ class VoteForm(forms.Form):
         is_up_vote = self.cleaned_data["is_up_vote"]
         post_id = self.cleaned_data["post_id"]
 
-        post = FacebookPost.objects.get(facebook_id=post_id)
+        post = MenuFacebook.objects.get(facebook_id=post_id)
         user_profile = UserProfile.objects.get(user=user)
 
         context = {
