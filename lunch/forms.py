@@ -173,7 +173,6 @@ class VoteForm(forms.Form):
                 user_profile.voted_down_on.add(post)
 
         post.save()
-        user_profile.save()
 
         context["rating"] = post.rating()
 

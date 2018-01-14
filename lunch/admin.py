@@ -17,6 +17,7 @@ class FacebookPostAdmin(admin.ModelAdmin):
 class RestaurantAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'facebook_id')
 
+
 class UserProfileInline(admin.StackedInline):
     model = UserProfile.restaurants.through
 
@@ -35,6 +36,7 @@ class UserProfileAdmin(admin.ModelAdmin):
 
     def restaurants_list(self, obj):
         return "\n".join([a.name for a in obj.restaurants.all()])
+
 
 class SeatAdmin(admin.ModelAdmin):
     list_display = ('id', 'restaurant', 'seats_taken', 'seats_total', 'date_declared')
