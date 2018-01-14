@@ -39,14 +39,14 @@ class MenuBase(PolymorphicModel):
 
 
 class MenuFacebook(MenuBase):
-    facebook_id = models.CharField(max_length=50, unique=True)
+    post_id = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
         # facebook_id has format: [profile_id]_[post_id]
         # we extract post id
-        post_id = self.facebook_id[self.facebook_id.index("_") + 1:]
+        post_id_printable = self.post_id[self.post_id.index("_") + 1:]
 
-        return f"{self.restaurant.name} {post_id}"
+        return f"{self.restaurant.name} {post_id_printable}"
 
 
 class MenuEmail(MenuBase):

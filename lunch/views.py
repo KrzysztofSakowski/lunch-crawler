@@ -19,7 +19,7 @@ from django.utils.timezone import make_aware
 
 import lunch.forms as lunch_forms
 from .facebook_api import FacebookFactory
-from .models import Restaurant, MenuFacebook, UserProfile, Occupation
+from .models import Restaurant, MenuFacebook, UserProfile, Occupation, MenuBase
 
 logger = logging.getLogger("logger")
 
@@ -55,7 +55,7 @@ def save_posts(restaurant, posts):
             restaurant=restaurant,
             created_date=date,
             message=menu,
-            facebook_id=post_id
+            post_id=post_id
         )
 
         try:
@@ -65,7 +65,7 @@ def save_posts(restaurant, posts):
 
 
 def find_in_db(restaurant):
-    query = MenuFacebook.objects.filter(
+    query = MenuBase.objects.filter(
         restaurant=restaurant,
     )
 
@@ -98,7 +98,7 @@ def get_post_ids(restaurant):
         restaurant=restaurant,
     )
 
-    return {post.facebook_id for post in query}
+    return {post.post_id for post in query}
 
 
 def crawl_facebook(restaurant, facebook):

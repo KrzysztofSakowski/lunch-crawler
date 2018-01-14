@@ -132,7 +132,7 @@ class VoteForm(forms.Form):
         is_up_vote = self.cleaned_data["is_up_vote"]
         post_id = self.cleaned_data["post_id"]
 
-        post = MenuFacebook.objects.get(facebook_id=post_id)
+        post = MenuFacebook.objects.get(post_id=post_id)
         user_profile = UserProfile.objects.get(user=user)
 
         context = {

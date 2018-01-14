@@ -6,7 +6,7 @@
   <main role="main" class="container">
     <div class="row">
       {% for restaurant, restaurant_context in restaurant_contexts.items %}
-        <div class="col-lg-4" id="{{ restaurant_context.menu.facebook_id }}">
+        <div class="col-lg-4" id="{{ restaurant_context.menu.post_id }}">
           <h2>{{ restaurant.name }}</h2>
           <div id="{{ restaurant.id }}">
             <p class="seats">
@@ -24,7 +24,7 @@
             <div class="btn-group">
               {% with 'true false' as list %}
                 {% for is_up_vote in list.split %}
-                  <form action="{% url 'vote' %}" method="post" id="{{ restaurant_context.menu.facebook_id }}"
+                  <form action="{% url 'vote' %}" method="post" id="{{ restaurant_context.menu.post_id }}"
                         class="vote_lunch">
                     {% csrf_token %}
                     <input type='hidden'
@@ -38,7 +38,7 @@
                   </form>
                 {% endfor %}
               {% endwith %}
-              <p><a class="btn btn-primary" href="https://facebook.com/{{ restaurant_context.menu.facebook_id }}"
+              <p><a class="btn btn-primary" href="https://facebook.com/{{ restaurant_context.menu.post_id }}"
                     role="button">Post
                 na fb &raquo;</a></p>
             </div>
