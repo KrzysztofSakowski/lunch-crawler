@@ -1,11 +1,11 @@
 from django.contrib import admin
 
-from .models import Restaurant, MenuFacebook, MenuEmail, UserProfile, Occupation
+from .models import MenuFacebook, MenuEmail, UserProfile, Occupation, FacebookRestaurant, EmailRestaurant
 
 
 class MenuBaseAdmin(admin.ModelAdmin):
-    list_display = ('id', 'restaurant', 'format_date', 'is_lunch', 'message')
-    list_filter = ('restaurant', 'created_date', 'is_lunch')
+    list_display = ('id', 'format_date', 'is_lunch', 'message')
+    list_filter = ('created_date', 'is_lunch')
     list_editable = ('is_lunch',)
 
     ordering = ['-created_date']
@@ -15,7 +15,7 @@ class MenuBaseAdmin(admin.ModelAdmin):
 
 
 class RestaurantAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'facebook_id')
+    list_display = ('id', 'name')
 
 
 class UserProfileInline(admin.StackedInline):
@@ -45,7 +45,8 @@ class SeatAdmin(admin.ModelAdmin):
         return obj.restaurant.name
 
 
-admin.site.register(Restaurant, RestaurantAdmin)
+admin.site.register(FacebookRestaurant, RestaurantAdmin)
+admin.site.register(EmailRestaurant, RestaurantAdmin)
 admin.site.register(MenuFacebook, MenuBaseAdmin)
 admin.site.register(MenuEmail, MenuBaseAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
