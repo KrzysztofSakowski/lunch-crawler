@@ -19,7 +19,7 @@ def move_objects(apps, schema_editor):
         query = MenuFacebook.objects.filter(restaurant_old=restaurant)
 
         for post in query:
-            post.restaurant_new.update(restaurant_new=facebook_restaurant)
+            post.update(restaurant_new=facebook_restaurant)
 
 
 def remove_temp_restaurant(apps, schema_editor):
