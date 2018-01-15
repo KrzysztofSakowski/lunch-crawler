@@ -5,7 +5,7 @@ from django.core.validators import MinValueValidator
 from django.db.models.functions import datetime
 from django.db import IntegrityError, transaction
 
-from .models import Restaurant, UserProfile, Occupation, FacebookPost
+from .models import UserProfile, Occupation, MenuFacebook, FacebookRestaurant, RestaurantBase, MenuBase
 from .facebook_api import Facebook
 import logging
 
@@ -41,7 +41,7 @@ class RestaurantAddForm(forms.Form):
         name = self.cleaned_data["name"]
         facebook_id = self.cleaned_data["facebook_id"]
 
-        restaurant = Restaurant(
+        restaurant = FacebookRestaurant(
             name=name,
             facebook_id=facebook_id
         )
@@ -51,7 +51,7 @@ class RestaurantAddForm(forms.Form):
         except IntegrityError:
             logger.warning(f"Restaurant with id={facebook_id} already exists in db")
 
-        restaurant = Restaurant.objects.get(facebook_id=facebook_id)
+        restaurant = FacebookRestaurant.objects.get(facebook_id=facebook_id)
 
         user_profile.restaurants.add(restaurant)
 
@@ -102,7 +102,7 @@ class SeatsOccupiedForm(forms.ModelForm):
         seats_taken = self.cleaned_data['seats_taken']
         seats_total = self.cleaned_data['seats_total']
 
-        occ = Occupation(restaurant=Restaurant.objects.get(id=restaurant_id),
+        occ = Occupation(restaurant=RestaurantBase.objects.get(id=restaurant_id),
                          seats_taken=seats_taken,
                          seats_total=seats_total,
                          date_declared=datetime.datetime.now())
@@ -118,7 +118,7 @@ class SeatsOccupiedForm(forms.ModelForm):
 
 
 class VoteForm(forms.Form):
-    post_id = forms.CharField(
+    menu_id = forms.CharField(
         max_length=50,
         widget=forms.HiddenInput()
     )
@@ -130,9 +130,9 @@ class VoteForm(forms.Form):
     @transaction.atomic
     def save(self, user):
         is_up_vote = self.cleaned_data["is_up_vote"]
-        post_id = self.cleaned_data["post_id"]
+        menu_id = self.cleaned_data["menu_id"]
 
-        post = FacebookPost.objects.get(facebook_id=post_id)
+        post = MenuBase.objects.get(id=menu_id)
         user_profile = UserProfile.objects.get(user=user)
 
         context = {
@@ -142,7 +142,7 @@ class VoteForm(forms.Form):
 
         if is_up_vote:
             if post in user_profile.voted_up_on.all():
-                err_msg = f"Already up voted post with id={post_id}"
+                err_msg = f"Already up voted post with id={menu_id}"
                 logger.warning(err_msg)
                 context["error"] = err_msg
 
@@ -158,7 +158,7 @@ class VoteForm(forms.Form):
 
         else:
             if post in user_profile.voted_down_on.all():
-                err_msg = f"Already down voted post with id={post_id}"
+                err_msg = f"Already down voted post with id={menu_id}"
                 logger.warning(err_msg)
                 context["error"] = err_msg
 
@@ -173,7 +173,6 @@ class VoteForm(forms.Form):
                 user_profile.voted_down_on.add(post)
 
         post.save()
-        user_profile.save()
 
         context["rating"] = post.rating()
 

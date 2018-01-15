@@ -1,11 +1,11 @@
 from django.contrib import admin
 
-from .models import Restaurant, FacebookPost, UserProfile, Occupation
+from .models import MenuFacebook, MenuEmail, UserProfile, Occupation, FacebookRestaurant, EmailRestaurant
 
 
-class FacebookPostAdmin(admin.ModelAdmin):
-    list_display = ('id', 'restaurant', 'format_date', 'is_lunch', 'message')
-    list_filter = ('restaurant', 'created_date', 'is_lunch')
+class MenuBaseAdmin(admin.ModelAdmin):
+    list_display = ('id', 'format_date', 'is_lunch', 'message')
+    list_filter = ('created_date', 'is_lunch')
     list_editable = ('is_lunch',)
 
     ordering = ['-created_date']
@@ -15,7 +15,8 @@ class FacebookPostAdmin(admin.ModelAdmin):
 
 
 class RestaurantAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'facebook_id')
+    list_display = ('id', 'name')
+
 
 class UserProfileInline(admin.StackedInline):
     model = UserProfile.restaurants.through
@@ -36,6 +37,7 @@ class UserProfileAdmin(admin.ModelAdmin):
     def restaurants_list(self, obj):
         return "\n".join([a.name for a in obj.restaurants.all()])
 
+
 class SeatAdmin(admin.ModelAdmin):
     list_display = ('id', 'restaurant', 'seats_taken', 'seats_total', 'date_declared')
 
@@ -43,7 +45,9 @@ class SeatAdmin(admin.ModelAdmin):
         return obj.restaurant.name
 
 
-admin.site.register(Restaurant, RestaurantAdmin)
-admin.site.register(FacebookPost, FacebookPostAdmin)
+admin.site.register(FacebookRestaurant, RestaurantAdmin)
+admin.site.register(EmailRestaurant, RestaurantAdmin)
+admin.site.register(MenuFacebook, MenuBaseAdmin)
+admin.site.register(MenuEmail, MenuBaseAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(Occupation, SeatAdmin)

@@ -9,8 +9,8 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 
 from .facebook_api import FacebookFactory
-from .models import Restaurant, FacebookPost, UserProfile
-from .views import find_in_db, crawl_facebook
+from .models import MenuFacebook, UserProfile, RestaurantBase, FacebookRestaurant
+from .views import find_in_db
 from .apps import LunchConfig
 
 
@@ -27,20 +27,20 @@ class IndexViewTests(TestCase):
         # if there is no posts associated with restaurant
         # facebook is going to be crawled and it will fail
         # on travis bc credentials are fake
-        Restaurant.objects.filter(pk__gt=1).delete()
-        restaurant = Restaurant.objects.get(id=1)
+        RestaurantBase.objects.filter(pk__gt=2).delete()
+        restaurant = RestaurantBase.objects.get(id=2)
 
-        FacebookPostTuple = namedtuple('FacebookPostTuple', ['restaurant', 'date', 'message', 'is_lunch', 'post_id'])
+        MenuFacebookTuple = namedtuple('MenuFacebookTuple', ['restaurant', 'date', 'message', 'is_lunch', 'post_id'])
 
         posts = [
-            FacebookPostTuple(
+            MenuFacebookTuple(
                 restaurant=restaurant,
                 date=datetime.date.today(),
                 message="",
                 post_id="1",
                 is_lunch="confirmed_not"
             ),
-            FacebookPostTuple(
+            MenuFacebookTuple(
                 restaurant=restaurant,
                 date=datetime.date.today(),
                 message="",
@@ -48,14 +48,14 @@ class IndexViewTests(TestCase):
                 is_lunch="unknown"
 
             ),
-            FacebookPostTuple(
+            MenuFacebookTuple(
                 restaurant=restaurant,
                 date=datetime.date.today(),
                 message="",
                 post_id="3",
                 is_lunch="confirmed"
             ),
-            FacebookPostTuple(
+            MenuFacebookTuple(
                 restaurant=restaurant,
                 date=datetime.date.today(),
                 message="",
@@ -65,12 +65,12 @@ class IndexViewTests(TestCase):
         ]
 
         for post in posts:
-            facebook_post = FacebookPost(
+            facebook_post = MenuFacebook(
                 restaurant=post.restaurant,
                 created_date=post.date,
                 message=post.message,
                 is_lunch=post.is_lunch,
-                facebook_id=post.post_id
+                post_id=post.post_id
             )
             facebook_post.save()
 
@@ -82,14 +82,14 @@ class IndexViewTests(TestCase):
         self.assertEqual(302, response.status_code)
 
     def test_db_find(self):
-        restaurant = Restaurant.objects.get(id=1)
+        restaurant = RestaurantBase.objects.get(id=2)
 
         post = find_in_db(restaurant)
 
-        self.assertEqual("3", post.facebook_id)
+        self.assertEqual("3", post.post_id)
 
-    def test_crawl_facebook(self):
-        test_restaurant = Restaurant(
+    def test_crawl_for_menus(self):
+        test_restaurant = FacebookRestaurant(
             name="text",
             facebook_id="text"
         )
@@ -105,11 +105,11 @@ class IndexViewTests(TestCase):
             post_id=post_id
         )
 
-        crawl_facebook(test_restaurant, facebook_stub)
+        test_restaurant.crawl_for_menus(facebook_stub)
 
         post_in_db = find_in_db(test_restaurant)
 
-        self.assertEqual(post_id, post_in_db.facebook_id)
+        self.assertEqual(post_id, post_in_db.post_id)
         self.assertEqual(message, post_in_db.message)
         self.assertEqual(dateutil.parser.parse(created_time), post_in_db.created_date)
 
@@ -133,8 +133,8 @@ class FacebookTest(TestCase):
 class UserProfileTests(TestCase):
     def test_profile_adds_restaurants(self):
         user_profile = UserProfile.objects.create(user=User.objects.create(username='asd', password='1234'))
-        restaurant1 = Restaurant.objects.create(name='Res1', facebook_id='1')
-        restaurant2 = Restaurant.objects.create(name='Res2', facebook_id='2')
+        restaurant1 = FacebookRestaurant.objects.create(name='Res1', facebook_id='1')
+        restaurant2 = FacebookRestaurant.objects.create(name='Res2', facebook_id='2')
 
         user_profile.restaurants.add(restaurant1)
         user_profile.restaurants.add(restaurant2)
@@ -143,7 +143,7 @@ class UserProfileTests(TestCase):
 
     def test_profile_validation_for_duplicate_restaurants(self):
         user_profile = UserProfile.objects.create(user=User.objects.create(username='asd', password='1234'))
-        restaurant = Restaurant.objects.create(name='Res1', facebook_id='1')
+        restaurant = FacebookRestaurant.objects.create(name='Res1', facebook_id='1')
 
         user_profile.restaurants.add(restaurant)
         user_profile.restaurants.add(restaurant)

@@ -6,7 +6,7 @@
   <main role="main" class="container">
     <div class="row">
       {% for restaurant, restaurant_context in restaurant_contexts.items %}
-        <div class="col-lg-4" id="{{ restaurant_context.menu.facebook_id }}">
+        <div class="col-lg-4" id="{{ restaurant_context.menu.id }}">
           <h2>{{ restaurant.name }}</h2>
           <div id="{{ restaurant.id }}">
             <p class="seats">
@@ -24,7 +24,7 @@
             <div class="btn-group">
               {% with 'true false' as list %}
                 {% for is_up_vote in list.split %}
-                  <form action="{% url 'vote' %}" method="post" id="{{ restaurant_context.menu.facebook_id }}"
+                  <form action="{% url 'vote' %}" method="post" id="{{ restaurant_context.menu.id }}"
                         class="vote_lunch">
                     {% csrf_token %}
                     <input type='hidden'
@@ -38,16 +38,20 @@
                   </form>
                 {% endfor %}
               {% endwith %}
-              <p><a class="btn btn-primary" href="https://facebook.com/{{ restaurant_context.menu.facebook_id }}"
-                    role="button">Post
-                na fb &raquo;</a></p>
+              {% if restaurant_context.menu.post_id %}
+                <p><a class="btn btn-primary" href="https://facebook.com/{{ restaurant_context.menu.post_id }}"
+                      role="button">Post
+                  na fb &raquo;</a></p>
+              {% endif %}
             </div>
           {% else %}
             <div class="alert alert-danger" role="alert">
               Restauracja nie dodała jeszcze menu.
             </div>
           {% endif %}
-          {% include 'lunch/seatsform.html' with form=seat_form %}
+          {% if user.is_authenticated %}
+            {% include 'lunch/seatsform.html' with form=seat_form %}
+          {% endif %}
         </div>
       {% endfor %}
     </div>
@@ -56,28 +60,28 @@
 
 {% block custom_scripts %}
   <script type="text/javascript">
-      var frm = $('.vote_lunch');
-      frm.submit(function () {
+      var vote_form = $('.vote_lunch');
+      vote_form.submit(function () {
           var formData = new FormData();
 
-          var post_id = $(this).prop('id');
+          var menu_id = $(this).prop('id');
           var is_up_vote = $(this).find('input[name=is_up_vote]').val();
           var csrfmiddlewaretoken = $(this).find('input[name=csrfmiddlewaretoken]').val();
 
           formData.append("is_up_vote", is_up_vote);
-          formData.append("post_id", post_id);
+          formData.append("menu_id", menu_id);
           formData.append("csrfmiddlewaretoken", csrfmiddlewaretoken);
 
           $.ajax({
-              type: frm.attr('method'),
-              url: frm.attr('action'),
+              type: vote_form.attr('method'),
+              url: vote_form.attr('action'),
               processData: false,
               contentType: false,
               cache: false,
               data: formData,
               success: function (data) {
                   console.log("submit success", data.rating);
-                  $('#' + post_id + ' p.rating').text("Ocena: " + data.rating);
+                  $('#' + menu_id + ' p.rating').text("Ocena: " + data.rating);
               },
               error: function (data) {
                   console.log("submit error: ", data.responseJSON.error);
@@ -86,10 +90,9 @@
           });
           return false;
       });
-  </script>
-  <script type="text/javascript">
-      var frm = $('.seats_vote');
-      frm.submit(function () {
+
+      var seats_form = $('.seats_vote');
+      seats_form.submit(function () {
           var formData = new FormData();
 
           var restaurant_id = $(this).prop('id');
@@ -103,8 +106,8 @@
           formData.append("csrfmiddlewaretoken", csrfmiddlewaretoken);
 
           $.ajax({
-              type: frm.attr('method'),
-              url: frm.attr('action'),
+              type: seats_form.attr('method'),
+              url: seats_form.attr('action'),
               processData: false,
               contentType: false,
               cache: false,

@@ -1,6 +1,5 @@
 from datetime import datetime, time, date, timedelta
 import logging
-import dateutil.parser
 import pandas as pd
 from collections import namedtuple
 
@@ -8,7 +7,6 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import redirect_to_login
-from django.db.utils import IntegrityError
 from django.shortcuts import redirect, resolve_url
 from django.shortcuts import render
 from django.urls import reverse
@@ -18,8 +16,7 @@ from django.views.generic import TemplateView
 from django.utils.timezone import make_aware
 
 import lunch.forms as lunch_forms
-from .facebook_api import FacebookFactory
-from .models import Restaurant, FacebookPost, UserProfile, Occupation
+from .models import MenuFacebook, UserProfile, Occupation, MenuBase, FacebookRestaurant, RestaurantBase
 
 logger = logging.getLogger("logger")
 
@@ -41,31 +38,8 @@ class TimeRangeValue:
         return self._end
 
 
-def save_posts(restaurant, posts):
-    logger.info(f"For {restaurant}: {len(posts)} posts are going be saved to db")
-
-    for post in posts:
-        menu = post['message']
-        post_id = post['id']
-        created_time = post['created_time']
-
-        date = dateutil.parser.parse(created_time)
-
-        facebook_post = FacebookPost(
-            restaurant=restaurant,
-            created_date=date,
-            message=menu,
-            facebook_id=post_id
-        )
-
-        try:
-            facebook_post.save()
-        except IntegrityError:
-            logger.warning(f"Facebook post with id={post_id} already exists in db")
-
-
 def find_in_db(restaurant):
-    query = FacebookPost.objects.filter(
+    query = MenuBase.objects.filter(
         restaurant=restaurant,
     )
 
@@ -91,28 +65,6 @@ def find_in_db(restaurant):
         return query[0]
     else:
         return None
-
-
-def get_post_ids(restaurant):
-    query = FacebookPost.objects.filter(
-        restaurant=restaurant,
-    )
-
-    return {post.facebook_id for post in query}
-
-
-def crawl_facebook(restaurant, facebook):
-    posts = facebook.get_posts(restaurant.facebook_id)
-
-    # filter posts that does not contain message
-    posts = [post for post in posts if 'message' in post]
-
-    # filter posts already in db
-    ids = get_post_ids(restaurant)
-
-    posts = [post for post in posts if post['id'] not in ids]
-
-    save_posts(restaurant=restaurant, posts=posts)
 
 
 def calc_avg_occupation(restaurant):
@@ -163,7 +115,7 @@ class RestaurantsView(TemplateView):
             menu = find_in_db(restaurant)
 
             if not menu:
-                crawl_facebook(restaurant, FacebookFactory.create())
+                restaurant.crawl_for_menus()
                 menu = find_in_db(restaurant)
 
             RestaurantContext = namedtuple('RestaurantContext', ["menu", "seats_availability"])
@@ -184,7 +136,12 @@ class ExampleRestaurantsView(RestaurantsView):
     get_method_log_info = "ExampleRestaurantsView view requested"
 
     def provide_restaurants(self, user=None):
-        return Restaurant.objects.all()
+        return [FacebookRestaurant.objects.get(facebook_id=id) for id in ["543608312506454",
+                                                                  "593169484049058",
+                                                                  "346442015431426",
+                                                                  "405341849804282",
+                                                                  "477554265603883",
+                                                                  "372700889466233"]]
 
 
 def seats(request):
@@ -197,7 +154,7 @@ def seats(request):
     if seats_form.is_valid():
         logger.debug('seats form valid')
         seats_form.save(int(request.POST['restaurant_id']))
-        new_availability = calc_avg_occupation(Restaurant.objects.get(id=int(request.POST['restaurant_id'])))
+        new_availability = calc_avg_occupation(RestaurantBase.objects.get(id=int(request.POST['restaurant_id'])))
         return JsonResponse(
             data={'seats_taken': new_availability.taken, 'seats_total': new_availability.total,
                   'restaurant_id': request.POST['restaurant_id']})
@@ -239,7 +196,7 @@ def add_restaurant_view(request):
 
 @staff_member_required
 def download_data(request):
-    posts = FacebookPost.objects.all()
+    posts = MenuFacebook.objects.all()
     data = serializers.serialize('json', posts)
 
     return JsonResponse(data, safe=False)
