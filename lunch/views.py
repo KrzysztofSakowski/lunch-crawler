@@ -137,11 +137,11 @@ class ExampleRestaurantsView(RestaurantsView):
 
     def provide_restaurants(self, user=None):
         return [FacebookRestaurant.objects.get(facebook_id=id) for id in ["543608312506454",
-                                                                  "593169484049058",
-                                                                  "346442015431426",
-                                                                  "405341849804282",
-                                                                  "477554265603883",
-                                                                  "372700889466233"]]
+                                                                          "593169484049058",
+                                                                          "346442015431426",
+                                                                          "405341849804282",
+                                                                          "477554265603883",
+                                                                          "372700889466233"]]
 
 
 def seats(request):
@@ -180,18 +180,18 @@ def signup_view(request):
 
 @login_required(login_url='/login/')
 def add_restaurant_view(request):
+    add_forms = [lunch_forms.FacebookRestaurantAddForm(request.POST or None),
+                 lunch_forms.EmailRestaurantAddForm(request.POST or None)]
     if request.method == 'POST':
-        form = lunch_forms.RestaurantAddForm(request.POST)
-        if form.is_valid():
+        form = list(filter(lambda x: x.is_valid(), add_forms))
+        if form:
             user_profile = UserProfile.objects.get(user=request.user)
 
-            restaurant = form.save(user_profile)
+            restaurant = form[0].save(user_profile)
             logger.info(f"{restaurant.name}")
             return redirect(reverse('restaurants'))
-    else:
-        form = lunch_forms.RestaurantAddForm()
 
-    return render(request, 'lunch/add_restaurant.html', {'form': form})
+    return render(request, 'lunch/add_restaurant.html', {'add_forms': add_forms})
 
 
 @staff_member_required

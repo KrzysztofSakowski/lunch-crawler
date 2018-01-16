@@ -7,10 +7,25 @@
 {% block content %}
   <div class="container">
     <h2>Restauracje</h2>
-    <form method="post" novalidate>
-      {% csrf_token %}
-      {% include '../form.html' %}
-      <button type="submit" class="btn btn-primary">Dodaj restauracje</button>
-    </form>
+    <ul class="nav nav-tabs">
+      <li class="active nav-item">
+        <a data-toggle="tab" href="#email_form">Email Restaurant</a>
+      </li>
+
+      <li class="nav-item">
+        <a data-toggle="tab" href="#facebook_form">Facebook Restaurant</a>
+      </li>
+    </ul>
+    <div class="tab-content">
+      {% for form in add_forms %}
+        <div id="{{ form.form_type }}" class="tab-pane fade">
+          <form method="post" novalidate>
+            {% csrf_token %}
+            {% include '../form.html' %}
+            <button name="{{ form.form_type }}" type="submit" class="btn btn-primary">Dodaj restauracje</button>
+          </form>
+        </div>
+      {% endfor %}
+    </div>
   </div>
 {% endblock %}
