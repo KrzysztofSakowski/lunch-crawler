@@ -183,11 +183,14 @@ def add_restaurant_view(request):
     add_forms = [lunch_forms.FacebookRestaurantAddForm(request.POST or None),
                  lunch_forms.EmailRestaurantAddForm(request.POST or None)]
     if request.method == 'POST':
-        form = list(filter(lambda x: x.is_valid(), add_forms))
-        if form:
+        if 'facebook_form' in request.POST:
+            form = add_forms[0]
+        if 'email_form' in request.POST:
+            form = add_forms[1]
+        if form.is_valid():
             user_profile = UserProfile.objects.get(user=request.user)
 
-            restaurant = form[0].save(user_profile)
+            restaurant = form.save(user_profile)
             logger.info(f"{restaurant.name}")
             return redirect(reverse('restaurants'))
 
