@@ -128,5 +128,5 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.deletion.CASCADE)
     restaurants = models.ManyToManyField(RestaurantBase)
 
-    voted_up_on = models.ManyToManyField(MenuBase, related_name="voted_up_on")
-    voted_down_on = models.ManyToManyField(MenuBase, related_name="voted_down_on")
+    voted_up_on = models.ManyToManyField(MenuBase, related_name="voted_up_on", blank=True)
+    voted_down_on = models.ManyToManyField(MenuBase, related_name="voted_down_on", blank=True)

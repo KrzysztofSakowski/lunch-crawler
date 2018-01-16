@@ -1,11 +1,11 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, validate_email
 from django.db.models.functions import datetime
 from django.db import IntegrityError, transaction
 
-from .models import UserProfile, Occupation, MenuFacebook, FacebookRestaurant, RestaurantBase, MenuBase
+from .models import UserProfile, Occupation, MenuFacebook, FacebookRestaurant, RestaurantBase, MenuBase, EmailRestaurant
 from .facebook_api import Facebook
 import logging
 
@@ -17,7 +17,7 @@ def is_valid_profile_id(facebook_id):
         raise ValidationError("Not valid facebook_id")
 
 
-class RestaurantAddForm(forms.Form):
+class FacebookRestaurantAddForm(forms.Form):
     name = forms.CharField(max_length=50, widget=forms.fields.TextInput(attrs={
         'placeholder': 'Enter restaurant name',
         'class': 'form-control input-lg',
@@ -36,6 +36,8 @@ class RestaurantAddForm(forms.Form):
         'name': {'required': "You have to provide name"},
         'facebook_id': {'required': "You have to provide id"}
     }
+
+    form_type = "facebook_form"
 
     def save(self, user_profile):
         name = self.cleaned_data["name"]
@@ -58,8 +60,47 @@ class RestaurantAddForm(forms.Form):
         return restaurant
 
 
-class FaceBookPostForm(RestaurantAddForm):
-    pass
+class EmailRestaurantAddForm(forms.Form):
+    name = forms.CharField(max_length=50, widget=forms.fields.TextInput(attrs={
+        'placeholder': 'Enter restaurant name',
+        'class': 'form-control input-lg',
+    }))
+
+    sender_email = forms.CharField(
+        max_length=50,
+        widget=forms.fields.TextInput(attrs={
+            'placeholder': 'Enter its e-mail',
+            'class': 'form-control input-lg',
+        }),
+        validators=[validate_email]
+    )
+
+    error_messages = {
+        'name': {'required': "You have to provide name"},
+        'sender_email': {'required': "You have to provide id"}
+    }
+
+    form_type = "email_form"
+
+    def save(self, user_profile):
+        name = self.cleaned_data["name"]
+        sender_email = self.cleaned_data["sender_email"]
+
+        restaurant = EmailRestaurant(
+            name=name,
+            sender_email=sender_email
+        )
+
+        try:
+            restaurant.save()
+        except IntegrityError:
+            logger.warning(f"Restaurant with email={sender_email} already exists in db")
+
+        restaurant = EmailRestaurant.objects.get(sender_email=sender_email)
+
+        user_profile.restaurants.add(restaurant)
+
+        return restaurant
 
 
 class UserProfileCreationForm(UserCreationForm):
