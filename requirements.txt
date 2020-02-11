@@ -1,7 +1,7 @@
 certifi==2017.7.27.1
 chardet==3.0.4
 dj-database-url==0.5.0
-Django==1.11.20
+Django==1.11.28
 django-model-utils==3.0.0
 django-widget-tweaks
 django-polymorphic==1.3
